@@ -1,4 +1,4 @@
-use crate::core::{MemoryStore, load_json, save_json, SettingsEntry, CommandEntry, HistoryEntry, Roles};
+use crate::core::{HistoryEntry, MemoryStore, Roles};
 use std::io::Error;
 
 mod ai;
@@ -10,10 +10,15 @@ mod voice;
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let mut store = MemoryStore::load().await?;
-    store.history.push(HistoryEntry { role: Roles::User, text: "hello".to_string() });
+
+    let question = "Привіт! Як тебе звати?";
+    let answer = ai::ask_ai(question, &store.history, &store.settings).await;
+    println!("Q: {question}");
+    println!("A: {answer}");
+
+    store.history.push(HistoryEntry { role: Roles::User, text: question.to_string() });
+    store.history.push(HistoryEntry { role: Roles::Tom, text: answer });
     store.save_history().await?;
-    store.settings.local_model = "llama3".to_string();
-    store.save_settings().await?;
 
     Ok(())
 }

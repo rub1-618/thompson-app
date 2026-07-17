@@ -40,7 +40,7 @@ pub struct CommandEntry {
     triggers: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 pub enum Roles {
     User,

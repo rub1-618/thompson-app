@@ -3,5 +3,5 @@
   "accent": "",
   "bg": "",
   "muted": "",
-  "local_model": "llama3"
+  "local_model": "llama3.2:1b"
 }
