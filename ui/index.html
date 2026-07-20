@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <title>Thompson</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 1rem; background: #1e1e2e; color: #cdd6f4; }
+    #log { white-space: pre-wrap; margin-top: 1rem; }
+    input { width: 100%; padding: .5rem; box-sizing: border-box; }
+  </style>
+</head>
+<body>
+  <h3>Thompson — тест мосту</h3>
+  <input id="cmd" placeholder="введи команду і Enter" autofocus />
+  <div id="log"></div>
+
+  <script>
+    // Мінімальний тест IPC: invoke → Rust-команда → відповідь.
+    const { invoke } = window.__TAURI__.core;
+    const input = document.getElementById("cmd");
+    const log = document.getElementById("log");
+
+    input.addEventListener("keydown", async (e) => {
+      if (e.key !== "Enter" || !input.value.trim()) return;
+      const text = input.value.trim();
+      input.value = "";
+      log.textContent += `> ${text}\n`;
+      try {
+        const answer = await invoke("execute_command", { text });
+        log.textContent += `${answer}\n`;
+      } catch (err) {
+        log.textContent += `[error] ${err}\n`;
+      }
+    });
+  </script>
+</body>
+</html>

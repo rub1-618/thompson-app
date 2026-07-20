@@ -35,9 +35,9 @@ pub struct HistoryEntry {
 
 #[derive(Serialize, Deserialize)]
 pub struct CommandEntry {
-    name: String,
-    path: String,
-    triggers: String,
+    pub name: String,
+    pub path: String,
+    pub triggers: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, Copy)]
