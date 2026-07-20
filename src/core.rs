@@ -15,29 +15,32 @@ pub struct MemoryStore {
     pub commands: Vec<CommandEntry>,
 }
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct SettingsEntry {
     pub accent: String,
     pub bg: String,
     pub muted: String,
     pub local_model: String,
+
+    #[serde(default)]
+    pub mute_status: bool,
     // todo: cloud_model: String,
     #[serde(flatten)]
     pub map: serde_json::Map<String, serde_json::Value>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct HistoryEntry {
     pub role: Roles,
     pub text: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 pub struct CommandEntry {
     pub name: String,
     pub path: String,
-    pub triggers: String,
+    pub triggers: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, Copy)]

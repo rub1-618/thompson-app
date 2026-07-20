@@ -1,11 +1,9 @@
 use crate::ai;
 use crate::core::{HistoryEntry, MemoryStore, Roles};
 use crate::commands::{CMDS, Command};
-use cpal::SampleFormat::U64;
 use rapidfuzz::fuzz::ratio;
 use tokio::sync::mpsc::UnboundedSender;
 use std::collections::BTreeSet;
-use std::time::Duration;
 use std::u64;
 
 const CMD_THRESHOLD: f64 = 0.55;
@@ -84,6 +82,11 @@ impl Dispatcher {
                 format!("Нагадаю через {} хв.", minutes)
             }
 
+            Command::OpenBrowser => {
+                let _ = open::that("https://google.com");
+                "Браузер відкрито!".to_string()
+            }
+
             Command::Dictation => {
                 let inline = strip_dictation_trigger(text);
                 if !inline.is_empty() {
@@ -101,9 +104,8 @@ impl Dispatcher {
 
 fn find_custom(text: &str, store: &MemoryStore) -> Option<(String, String)> {
     for cmd in &store.commands {
-        for trigger in cmd.triggers.split(',') {
-            let trigger = trigger.trim();
-            if !trigger.is_empty() && token_set_ratio(text, trigger) >= CMD_THRESHOLD {
+        for trigger in &cmd.triggers {
+            if  token_set_ratio(text, trigger) >= CMD_THRESHOLD {
                 return Some((cmd.name.clone(), cmd.path.clone()))
             }
         }
