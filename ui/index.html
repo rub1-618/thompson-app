@@ -3,35 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <title>Thompson</title>
-  <style>
-    body { font-family: sans-serif; margin: 0; padding: 1rem; background: #1e1e2e; color: #cdd6f4; }
-    #log { white-space: pre-wrap; margin-top: 1rem; }
-    input { width: 100%; padding: .5rem; box-sizing: border-box; }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h3>Thompson — тест мосту</h3>
-  <input id="cmd" placeholder="введи команду і Enter" autofocus />
-  <div id="log"></div>
 
-  <script>
-    // Мінімальний тест IPC: invoke → Rust-команда → відповідь.
-    const { invoke } = window.__TAURI__.core;
-    const input = document.getElementById("cmd");
-    const log = document.getElementById("log");
+  <header class="app-header" data-tauri-drag-region>
+    <nav class="navbar">
+      <button id="btn-settings" onclick="showPage('settings')">
+        <span class="icon icon-settings"></span>
+      </button>
+      <button id="btn-chat" onclick="showPage('chat')">
+        <span class="icon icon-chat"></span>
+      </button>
+    </nav>
+  </header>
 
-    input.addEventListener("keydown", async (e) => {
-      if (e.key !== "Enter" || !input.value.trim()) return;
-      const text = input.value.trim();
-      input.value = "";
-      log.textContent += `> ${text}\n`;
-      try {
-        const answer = await invoke("execute_command", { text });
-        log.textContent += `${answer}\n`;
-      } catch (err) {
-        log.textContent += `[error] ${err}\n`;
-      }
-    });
-  </script>
+  <!--! chat -->
+
+  <div id="page-chat" class="page">  
+    <div class="chat">
+      <div id="log"></div>
+    </div>
+
+    <div class="msg-input">
+      <input id="cmd" placeholder="Введи команду..." autofocus />
+      <div class="input-controls">
+        <button id="btn-mute" onclick="toggleMute()">
+          <span class="icon icon-mute"></span>
+        </button>
+        <button id="btn-send" onclick="sendCommand()">
+          <span class="icon icon-send"></span>
+        </button>
+      </div>  
+    </div>
+
+  </div>
+
+  <!--! settings -->
+
+  <div id="page-settings" class="page">
+    <div class="settings-container">
+
+      <!-- * models -->
+      <label>Модель: <input id="set-model" type="text" /></label>
+      <p>Ви можете знайти багато моделей на <a id="ollama-href" href="#" onclick="openExternal('https://ollama.com/library?sort=popular'); return false;">https://ollama.com</a></p>
+      
+      <!-- * themes -->
+      <label>Акцент: <input id="set-accent" type="color" /></label>
+      <label>Фон: <input id="set-bg" type="color" /></label>
+      <label>Другорядний: <input id="set-muted" type="color" /></label>
+ 
+      <button onclick="saveSettings()">Зберегти</button>
+    </div>
+  </div>
+
+  <!--! models -->
+
+  <div id="page-models" class="page">
+    <!-- v0.2+ -->
+  </div>
+
+  <script src="main.js" defer></script>
 </body>
 </html>

@@ -1,0 +1,100 @@
+const { invoke } = window.__TAURI__.core;
+const { listen } = window.__TAURI__.event;
+
+const input = document.getElementById("cmd");
+const log = document.getElementById("log");
+
+function addMessage(text, role) {
+    const el = document.createElement("div");
+    el.className = `msg msg-${role}`;
+    el.textContent = text;
+    log.appendChild(el);
+    log.scrollTop = log.scrollHeight;
+}
+
+input.addEventListener("keydown", async (e) => {
+    if (e.key !== "Enter" || !input.value.trim()) return;
+    sendCommand();
+});
+
+async function sendCommand() {
+    if (!input.value.trim()) return;
+    const text = input.value.trim();
+    input.value = "";
+    addMessage(text, "user");
+    try {
+        const answer = await invoke("execute_command", { text });
+        if (answer) addMessage(answer, "tom")
+    } catch (err) {
+        addMessage(`[error] ${err}`, "error");
+    }
+}
+
+async function toggleMute() {
+    try {
+        const muted = await invoke("toggle_mute");
+        setMuteIcon(muted);
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function setMuteIcon(muted) {
+    const icon = document.querySelector("#btn-mute .icon");
+    icon.classList.toggle("icon-mute", muted);
+    icon.classList.toggle("icon-sound", !muted);
+}
+
+async function loadSettings() {
+    const s = await invoke("get_settings");
+    document.getElementById("set-model").value = s.local_model;
+    document.getElementById("set-accent").value = s.accent;
+    document.getElementById("set-bg").value = s.bg;
+    document.getElementById("set-muted").value = s.muted;
+}
+
+async function saveSettings() {
+    const data = {
+        local_model: document.getElementById("set-model").value,
+        accent: document.getElementById("set-accent").value,
+        bg: document.getElementById("set-bg").value,
+        muted: document.getElementById("set-muted").value,
+    };
+    await invoke("save_settings", { data });
+    applyTheme(data);
+    showPage("chat");
+}
+
+function openExternal(url) {
+    invoke("open_url", { url });
+}
+
+function applyTheme(s) {
+    const root = document.documentElement.style;
+    if (s.accent) root.setProperty("--accent", s.accent);
+    if (s.bg) root.setProperty("--bg", s.bg);
+    if (s.muted) root.setProperty("--muted", s.muted);
+}
+
+async function init() {
+    const s = await invoke("get_settings");
+    applyTheme(s);
+    setMuteIcon(s.mute_status);
+}
+
+function showPage(page) {
+    document.querySelectorAll(".page").forEach((el) => {
+        el.classList.toggle("active", el.id === `page-${page}` )
+    });
+    if (page === "settings") loadSettings();
+}
+
+listen("reminder", (e) => {
+    addMessage(`🔔 ${e.payload}`, "tom");
+})
+
+window.toggleMute = toggleMute;
+window.showPage = showPage;
+window.openExternal = openExternal;
+showPage("chat")
+init()

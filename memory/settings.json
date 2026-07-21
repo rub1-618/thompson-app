@@ -1,7 +1,8 @@
 {
-  "trash_key": "123",
-  "accent": "",
-  "bg": "",
-  "muted": "",
-  "local_model": "llama3.2:1b"
+  "accent": "#9d9d9d",
+  "bg": "#2a2a2a",
+  "muted": "#4f4f4f",
+  "local_model": "llama3.2:1b",
+  "mute_status": true,
+  "trash_key": "123"
 }

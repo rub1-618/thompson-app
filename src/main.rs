@@ -125,6 +125,9 @@ fn open_url(url: String) -> Result<(), String> {
 }
 
 fn main() {
+    // webkit + wayland + nvidia fix
+    unsafe { std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1"); }
+
     // tx goes to dispatcher, rx to read it
     let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<String>();
 
