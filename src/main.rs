@@ -1,4 +1,4 @@
-use crate::{core::{CommandEntry, HistoryEntry, SettingsEntry}, dispatcher::Dispatcher, tts::TtsCommand::Speak};
+use crate::{core::{CommandEntry, HistoryEntry, SettingsEntry}, dispatcher::Dispatcher};
 use std::sync::{atomic::Ordering, mpsc::Sender};
 use core::MemoryStore;
 use tauri::{Emitter, Manager, State};
@@ -155,6 +155,8 @@ fn open_url(url: String) -> Result<(), String> {
 }
 
 fn main() {
+    // whisper log-flooding fix
+    whisper_rs::install_logging_hooks();
     // webkit + wayland + nvidia fix
     unsafe { std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1"); }
 

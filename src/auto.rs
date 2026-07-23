@@ -104,12 +104,63 @@ mod music_impl {
     }
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(target_os = "windows")]
 mod music_impl {
-    pub fn toggle() -> String { "Керування музикою поки лише на Linux.".to_string() }
-    pub fn next() -> String { "Керування музикою поки лише на Linux.".to_string() }
-    pub fn prev() -> String { "Керування музикою поки лише на Linux.".to_string() }
-    pub fn info() -> String { "Немає інформації про трек.".to_string() }
+    use windows::Win32::UI::Input::KeyboardAndMouse::{keybd_event, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP, VK_MEDIA_NEXT_TRACK, VK_MEDIA_PREV_TRACK, VK_MEDIA_PLAY_PAUSE};
+    use windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager;
+
+
+    pub fn toggle() -> String {
+        unsafe {
+            keybd_event(VK_MEDIA_PLAY_PAUSE.0 as u8, 0, KEYBD_EVENT_FLAGS(0), 0);
+            keybd_event(VK_MEDIA_PLAY_PAUSE.0 as u8, 0, KEYEVENTF_KEYUP, 0);
+        }
+        "Музика перемкнена".to_string()
+    }
+
+    pub fn next() -> String {
+        unsafe {
+            keybd_event(VK_MEDIA_NEXT_TRACK.0 as u8, 0, KEYBD_EVENT_FLAGS(0), 0);
+            keybd_event(VK_MEDIA_NEXT_TRACK.0 as u8, 0, KEYEVENTF_KEYUP, 0);
+        }
+        "Музика перемкнена".to_string()
+    }
+
+    pub fn prev() -> String {
+        unsafe {
+            keybd_event(VK_MEDIA_PREV_TRACK.0 as u8, 0, KEYBD_EVENT_FLAGS(0), 0);
+            keybd_event(VK_MEDIA_PREV_TRACK.0 as u8, 0, KEYEVENTF_KEYUP, 0);
+        }
+        "Музика перемкнена".to_string()
+    }
+
+    pub fn info() -> String {
+        let manager = match GlobalSystemMediaTransportControlsSessionManager::RequestAsync() {
+            Ok(op) => {match op.get() {
+                Ok(m) => m,
+                Err(_) => return "Немає інформації про трек.".to_string()
+            }}
+            Err(_) => return "Немає інформації про трек.".to_string()
+        };
+        let session = match manager.GetCurrentSession() {
+            Ok(s) => s,
+            Err(_) => return "Немає активного плеєра.".to_string()
+        };
+        let props = match session.TryGetMediaPropertiesAsync() {
+            Ok(op) => match op.get() {
+                Ok(p) => p,
+                Err(_) => return "Немає інформації про трек.".to_string()
+            },
+            Err(_) => return "Немає інформації про трек.".to_string()
+        };
+        let title = props.Title().map(|e| e.to_string()).unwrap_or_default();
+        let artist = props.AlbumArtist().map(|e| e.to_string()).unwrap_or_default();
+        if artist.is_empty() {
+            format!("Зараз грає: {title}")
+        } else {
+            format!("Зараз грає: {title} від {artist}.")
+        }
+    }
 }
 
 pub fn music_toggle() -> String { music_impl::toggle() }

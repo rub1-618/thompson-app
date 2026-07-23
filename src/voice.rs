@@ -11,6 +11,7 @@ const SPEECH_START: f32 = 0.008;
 const SPEECH_END: f32 = 0.004;
 const SILENCE_MS: usize = 800;
 const IN_RATE: usize = 48000;
+const OUT_RATE: usize = 16000;
 const WAKE_WORDS: [&str; 7] = ["том", "tomi", "дом", "тому", "tom", "thompson", "томпсон"]; // дом + тому -- for better model perfomance
 const STOP_WORDS: [&str; 5] = ["стоп", "замовчи", "тихо", "мовчи", "stop"];
 const FILLERS: [&str; 14] = [
@@ -182,7 +183,7 @@ pub fn listen_loop(running: Arc<AtomicBool>, events: UnboundedSender<VoiceEvent>
                 silence += chunk.len();
                 if silence >= silence_limit {
                     let audio: Vec<f32> = utter.iter()
-                        .step_by(3)
+                        .step_by(IN_RATE / OUT_RATE)
                         .copied().collect();
                     let _ = events.send(VoiceEvent::Status("processing"));
                     let text = transcribe(&mut wstate, &audio);
