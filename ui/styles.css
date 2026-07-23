@@ -125,7 +125,8 @@ body {
     background-color: transparent;
     font-family: var(--font);
     padding: 8px 12px;
-    font-size: var(--fsize-sml);
+    font-size: var(--fsize-mid);
+    font-weight: 500;
 }
 
 #cmd::placeholder {

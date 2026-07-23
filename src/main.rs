@@ -1,5 +1,5 @@
-use crate::{core::{SettingsEntry, HistoryEntry, CommandEntry}, dispatcher::Dispatcher};
-use std::sync::atomic::Ordering;
+use crate::{core::{CommandEntry, HistoryEntry, SettingsEntry}, dispatcher::Dispatcher, tts::TtsCommand::Speak};
+use std::sync::{atomic::Ordering, mpsc::Sender};
 use core::MemoryStore;
 use tauri::{Emitter, Manager, State};
 use tokio::sync::Mutex;
@@ -15,11 +15,13 @@ mod voice;
 struct AppState {
     dispatcher: Dispatcher,
     store: MemoryStore,
+    tts: Sender<tts::TtsCommand>
 }
 
 struct VoiceControl {
     running: std::sync::Arc<std::sync::atomic::AtomicBool>,
     events: tokio::sync::mpsc::UnboundedSender<voice::VoiceEvent>,
+    tts_speaking: std::sync::Arc::<std::sync::atomic::AtomicBool>,
 }
 
 #[tauri::command]
@@ -28,8 +30,15 @@ async fn execute_command(
     state: State<'_, Mutex<AppState>>,
 ) -> Result<String, String> {
     let mut guard = state.lock().await;
-    let AppState { dispatcher, store } = &mut *guard;
-    Ok(dispatcher.execute(&text, store).await)
+    let AppState { dispatcher, store, tts } = &mut *guard;
+    if let Some((crate::commands::Command::Stop,_)) = crate::dispatcher::find_command(&text) {
+        let _ = tts.send(tts::TtsCommand::Stop);
+    }
+    let response = dispatcher.execute(&text, store).await;
+    if !response.is_empty() {
+        let _ = tts.send(tts::TtsCommand::Speak(response.clone()));
+    }
+    Ok(response)
 }
 
 #[tauri::command]
@@ -39,7 +48,9 @@ async fn toggle_mute(
     let mut guard = state.lock().await;
     guard.store.settings.mute_status = !guard.store.settings.mute_status;
     guard.store.save_settings().await.map_err(|e| e.to_string())?;
-    Ok(guard.store.settings.mute_status)
+    let muted = guard.store.settings.mute_status;
+    let _ = guard.tts.send(tts::TtsCommand::SetMute(muted));
+    Ok(muted)
 }
 
 #[tauri::command]
@@ -49,7 +60,8 @@ fn toggle_listening(control: State<'_, VoiceControl>) -> Result<bool, String> {
     if status {
         let running = control.running.clone();
         let events = control.events.clone();
-        std::thread::spawn(move || voice::listen_loop(running, events));
+        let speaking = control.tts_speaking.clone();
+        std::thread::spawn(move || voice::listen_loop(running, events, speaking));
     }
     Ok(status)
 }
@@ -153,10 +165,18 @@ fn main() {
     let store = tauri::async_runtime::block_on(MemoryStore::load())
         .expect("не вдалось завантажити memory/");
     let dispatcher = Dispatcher::new(tx);
-    let state = Mutex::new(AppState {dispatcher, store});
+    let voice = store.settings.map.get("tts_voice")
+        .and_then(|v| v.as_str()).unwrap_or("").to_string();
+    let rate = store.settings.map.get("tts_rate")
+        .and_then(|v| v.as_i64()).unwrap_or(0) as i32;
+    let tts_speaking = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let tts = tts::spawn_tts(voice, rate, tts_speaking.clone());
+    let _ = tts.send(tts::TtsCommand::SetMute(store.settings.mute_status));
+    let state = Mutex::new(AppState {dispatcher, store, tts});
     let voice_control = VoiceControl {
        running: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
-       events: voice_tx, 
+       events: voice_tx,
+       tts_speaking,
     };
 
     tauri::Builder::default()
@@ -179,14 +199,18 @@ fn main() {
                         }
                         voice::VoiceEvent::Stop => {
                             let _ = handle2.emit("setStatus", "idle");
+                            let state = handle2.state::<Mutex<AppState>>();
+                            let guard = state.lock().await;
+                            let _ = guard.tts.send(tts::TtsCommand::Stop);
                         }
                         voice::VoiceEvent::Command(cmd) => {
                             let _ = handle2.emit("addMessage", (cmd.clone(), "user"));
                             let state = handle2.state::<Mutex<AppState>>();
                             let mut guard = state.lock().await;
-                            let AppState { dispatcher, store } = &mut *guard;
+                            let AppState { dispatcher, store, tts } = &mut *guard;
                             let response = dispatcher.execute(&cmd, store).await;
                             if !response.is_empty() {
+                                let _ = tts.send(tts::TtsCommand::Speak(response.clone()));
                                 let _ = handle2.emit("addMessage", (response, "tom"));
                             }
                         }

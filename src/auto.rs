@@ -44,7 +44,7 @@ pub fn screen() -> String {
     "Аналіз екрану ще не доступний.".to_string()
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(not(target_os = "windows"))]
 mod music_impl {
     use mpris::{Player, PlayerFinder};
     

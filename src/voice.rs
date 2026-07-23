@@ -115,7 +115,7 @@ fn transcribe(state: &mut whisper_rs::WhisperState, audio: &[f32]) -> String {
     text
 }
 
-pub fn listen_loop(running: Arc<AtomicBool>, events: UnboundedSender<VoiceEvent>) {
+pub fn listen_loop(running: Arc<AtomicBool>, events: UnboundedSender<VoiceEvent>, speaking: Arc<AtomicBool>) {
     let host = cpal::default_host();
     let device = match host.default_input_device() {
         Some(d) => d,
@@ -162,6 +162,13 @@ pub fn listen_loop(running: Arc<AtomicBool>, events: UnboundedSender<VoiceEvent>
             Err(mpsc::RecvTimeoutError::Timeout) => {continue}
             Err(mpsc::RecvTimeoutError::Disconnected) => {break}
         };
+
+        if speaking.load(Ordering::Relaxed) {
+            in_speech = false;
+            utter.clear();
+            silence = 0;
+            continue;
+        }
         
         let level = rms(&chunk);
 
