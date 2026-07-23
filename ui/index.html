@@ -12,6 +12,7 @@
       <button id="btn-settings" onclick="showPage('settings')">
         <span class="icon icon-settings"></span>
       </button>
+      <span id="status"></span>
       <button id="btn-chat" onclick="showPage('chat')">
         <span class="icon icon-chat"></span>
       </button>
@@ -28,9 +29,14 @@
     <div class="msg-input">
       <input id="cmd" placeholder="Введи команду..." autofocus />
       <div class="input-controls">
-        <button id="btn-mute" onclick="toggleMute()">
-          <span class="icon icon-mute"></span>
-        </button>
+        <div class="left-controls">
+          <button id="btn-mute" onclick="toggleMute()">
+            <span class="icon icon-mute"></span>
+          </button>
+          <button id="btn-vinput" onclick="toggleListening()">
+            <span class="icon icon-vinput-off"></span>
+          </button>
+        </div>
         <button id="btn-send" onclick="sendCommand()">
           <span class="icon icon-send"></span>
         </button>

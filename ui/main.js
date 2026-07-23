@@ -3,6 +3,13 @@ const { listen } = window.__TAURI__.event;
 
 const input = document.getElementById("cmd");
 const log = document.getElementById("log");
+const STATUS_LABELS = {
+    listening:  "Слухаю",
+    processing: "Обробляю...",
+    wake:       "Так?",
+    idle:       "",
+    no_mic:     "Немає мікрофона",
+}
 
 function addMessage(text, role) {
     const el = document.createElement("div");
@@ -37,6 +44,28 @@ async function toggleMute() {
     } catch (err) {
         console.error(err);
     }
+}
+
+function setStatus(status) {
+    document.getElementById("status").textContent = STATUS_LABELS[status] ?? "";
+    const btn = document.getElementById("btn-vinput");
+    btn.dataset.status = status;
+}
+
+
+async function toggleListening(is_listening) {
+    try {
+        const on = await invoke("toggle_listening");
+        setVoiceIcon(on);
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function setVoiceIcon(on) {
+    const icon = document.querySelector("#btn-vinput .icon");
+    icon.classList.toggle("icon-vinput", on);
+    icon.classList.toggle("icon-vinput-off", !on);
 }
 
 function setMuteIcon(muted) {
@@ -89,11 +118,12 @@ function showPage(page) {
     if (page === "settings") loadSettings();
 }
 
-listen("reminder", (e) => {
-    addMessage(`🔔 ${e.payload}`, "tom");
-})
+listen("reminder", (e) => addMessage(`🔔 ${e.payload}`, "tom"))
+listen("addMessage", (e) => addMessage(e.payload[0], e.payload[1]))
+listen("setStatus", (e) => setStatus(e.payload))
 
 window.toggleMute = toggleMute;
+window.toggleListening = toggleListening;
 window.showPage = showPage;
 window.openExternal = openExternal;
 showPage("chat")

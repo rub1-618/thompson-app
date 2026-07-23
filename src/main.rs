@@ -1,6 +1,7 @@
 use crate::{core::{SettingsEntry, HistoryEntry, CommandEntry}, dispatcher::Dispatcher};
+use std::sync::atomic::Ordering;
 use core::MemoryStore;
-use tauri::{Emitter, State};
+use tauri::{Emitter, Manager, State};
 use tokio::sync::Mutex;
 
 mod ai;
@@ -14,6 +15,11 @@ mod voice;
 struct AppState {
     dispatcher: Dispatcher,
     store: MemoryStore,
+}
+
+struct VoiceControl {
+    running: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    events: tokio::sync::mpsc::UnboundedSender<voice::VoiceEvent>,
 }
 
 #[tauri::command]
@@ -34,6 +40,18 @@ async fn toggle_mute(
     guard.store.settings.mute_status = !guard.store.settings.mute_status;
     guard.store.save_settings().await.map_err(|e| e.to_string())?;
     Ok(guard.store.settings.mute_status)
+}
+
+#[tauri::command]
+fn toggle_listening(control: State<'_, VoiceControl>) -> Result<bool, String> {
+    let status = !control.running.load(Ordering::Relaxed);
+    control.running.store(status, Ordering::Relaxed);
+    if status {
+        let running = control.running.clone();
+        let events = control.events.clone();
+        std::thread::spawn(move || voice::listen_loop(running, events));
+    }
+    Ok(status)
 }
 
 #[tauri::command]
@@ -130,20 +148,49 @@ fn main() {
 
     // tx goes to dispatcher, rx to read it
     let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<String>();
+    let (voice_tx, mut voice_rx) = tokio::sync::mpsc::unbounded_channel::<voice::VoiceEvent>();
 
     let store = tauri::async_runtime::block_on(MemoryStore::load())
         .expect("не вдалось завантажити memory/");
     let dispatcher = Dispatcher::new(tx);
     let state = Mutex::new(AppState {dispatcher, store});
+    let voice_control = VoiceControl {
+       running: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+       events: voice_tx, 
+    };
 
     tauri::Builder::default()
         .manage(state)
+        .manage(voice_control)
         .setup(move |app| {
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 let mut rx = rx;
                 while let Some(msg) = rx.recv().await {
                     let _ = handle.emit("reminder", msg);
+                }
+            });
+            let handle2 = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                while let Some(ev) = voice_rx.recv().await {
+                    match ev {
+                        voice::VoiceEvent::Status(s) => {
+                            let _ = handle2.emit("setStatus", s);
+                        }
+                        voice::VoiceEvent::Stop => {
+                            let _ = handle2.emit("setStatus", "idle");
+                        }
+                        voice::VoiceEvent::Command(cmd) => {
+                            let _ = handle2.emit("addMessage", (cmd.clone(), "user"));
+                            let state = handle2.state::<Mutex<AppState>>();
+                            let mut guard = state.lock().await;
+                            let AppState { dispatcher, store } = &mut *guard;
+                            let response = dispatcher.execute(&cmd, store).await;
+                            if !response.is_empty() {
+                                let _ = handle2.emit("addMessage", (response, "tom"));
+                            }
+                        }
+                    }
                 }
             });
             Ok(())
@@ -154,7 +201,7 @@ fn main() {
             get_history, get_commands,
             save_command, delete_command,
             minimize_window, close_window,
-            move_window, open_url,
+            move_window, open_url, toggle_listening,
         ])
         .run(tauri::generate_context!())
         .expect("помилка запуску Tauri")

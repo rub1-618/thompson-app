@@ -3,6 +3,6 @@
   "bg": "#2a2a2a",
   "muted": "#4f4f4f",
   "local_model": "llama3.2:1b",
-  "mute_status": true,
+  "mute_status": false,
   "trash_key": "123"
 }

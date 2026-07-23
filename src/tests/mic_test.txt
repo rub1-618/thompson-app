@@ -1,0 +1,27 @@
+use cpal::traits::{HostTrait, DeviceTrait, StreamTrait};
+
+fn main() {
+    let host = cpal::default_host();
+    let device = host.default_input_device().expect("Немає мікрофона.");
+    let desc = device.description().expect("немає опису пристрою");
+    println!("Пристрій: {}", desc.name());
+
+    let config = device.default_input_config().expect("Немає конфігу");
+    println!("Формат: {:?}", config);
+
+    let stream = device.build_input_stream(
+        config.into(), 
+        move |data: &[f32], _: &cpal::InputCallbackInfo| {
+            let rms = (data.iter().map(|x| x * x).sum::<f32>() / data.len() as f32).sqrt();
+            let bars = "#".repeat((rms * 200.0) as usize);
+            println!("{rms:.4} {bars}");
+        },
+        move |err| eprintln!("stream error: {err}"),
+        None,
+    ).expect("не вдалось відкрити потік");
+
+    stream.play().expect("play");
+    println!("Слухаю 10 секунд, говори в мікрофон...");
+    std::thread::sleep(std::time::Duration::from_secs(10));
+
+}

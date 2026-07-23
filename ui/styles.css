@@ -57,9 +57,17 @@ body {
 .navbar {
     display: flex;
     align-items: center;
+    background:var(--muted) ;
     padding: 10px;
     justify-content: space-between;
     border-bottom: solid 2px var(--accent);
+    box-shadow: 0 2px 12px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+#status {
+    font-family: var(--font);
+    font-style: italic;
+    color: var(--text-color);
 }
 
 .msg-input {
@@ -78,8 +86,8 @@ body {
     border-top: 1px solid var(--accent);
     padding-top: 4px;
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
 }
 
 .msg {
@@ -137,16 +145,20 @@ body {
 .icon-mute      { --icon: url("assets/muted.svg"); }
 .icon-chat      { --icon: url("assets/chat.svg"); }
 .icon-send      { --icon: url("assets/send.svg"); }
+.icon-mic       { --icon: url("assets/mic.svg"); }
+.icon-mic-off   { --icon: url("assets/mic-off.svg"); }
+.icon-vinput    { --icon: url("assets/vinput.svg"); }
+.icon-vinput-off{ --icon: url("assets/vinput_off.svg"); }
 
 /* navbar icons */
 #btn-settings, #btn-chat {
-    color: var(--accent);
+    color: var(--text-color);
     background-color: transparent;
     border-color: transparent;
 }
 
 /* cmd icons */
-#btn-mute {
+#btn-mute, #btn-vinput {
     color: var(--text-color);
     background-color: transparent;
     border-color: transparent;
@@ -161,6 +173,24 @@ body {
 #btn-mute:hover .icon-mute {
     color: var(--text-color);
     animation: sound-move 0.3s ease;
+    cursor: pointer;
+}
+
+#btn-mute:hover .icon-sound {
+    color: var(--text-color);
+    animation: muted-move 0.1s ease;
+    cursor: pointer;
+}
+
+#btn-vinput:hover .icon-vinput {
+    color: var(--text-color);
+    animation: vinp-move 0.1s ease;
+    cursor: pointer;
+}
+
+#btn-vinput:hover .icon-vinput-off {
+    color: var(--text-color);
+    animation: vinp-off-move 0.3s ease;
     cursor: pointer;
 }
 
@@ -191,6 +221,12 @@ body {
     100%    { transform: rotate(-10deg);}
 }
 
+@keyframes muted-move {
+    0%      { transform: rotate(0deg); }
+    50%     { transform: rotate(-10deg); }
+    100%    { transform: rotate(10deg);}
+}
+
 @keyframes msg-move {
     0%      { transform: rotate(0deg); }
     50%     { transform: translateY(-3px); }
@@ -198,10 +234,16 @@ body {
     100%    { transform: translateY(3px);}
 }
 
-@keyframes arrow-move {
-    0%      { transform: translateY(3px); }
-    50%     { transform: translateY(-3px); }
-    100%    { transform: translateY(-3px);}
+@keyframes vinp-move {
+    0%      { transform: translate(0px, 0px);}
+    50%     { transform: translate(2px, 2px);}
+    100%    { transform: translate(-2px, -2px);}
+}
+
+@keyframes vinp-off-move {
+    0%      { transform: translate(0px, 0px);}
+    50%     { transform: translate(-2px, -2px);}
+    100%    { transform: translate(2px, 2px);}
 }
 
 .page {
