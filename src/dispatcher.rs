@@ -87,6 +87,8 @@ impl Dispatcher {
                 "Браузер відкрито!".to_string()
             }
 
+            Command::Stats => crate::auto::stats(),
+
             Command::Dictation => {
                 let inline = strip_dictation_trigger(text);
                 if !inline.is_empty() {
@@ -97,7 +99,14 @@ impl Dispatcher {
                 }
             }
             
-            other => format!("Команда {other:?} ще не реалізована."),
+            Command::WindowOpen | Command::WindowHide
+            | Command::WindowClose => crate::auto::window(text),
+            Command::Screen => crate::auto::screen(),
+            Command::MusicToggle => crate::auto::music_toggle(),
+            Command::MusicNext => crate::auto::music_next(),
+            Command::MusicPrev => crate::auto::music_prev(),
+            Command::MusicInfo => crate::auto::music_info(),
+            
         }
     }
 }
