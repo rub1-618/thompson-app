@@ -16,11 +16,16 @@
         <button id="btn-commands" onclick="showPage('commands')">
           <span class="icon icon-commands"></span>
         </button>
+        <button id="btn-chat" onclick="showPage('chat')">
+          <span class="icon icon-chat"></span>
+        </button>
       </div>
       <span id="status"></span>
-      <button id="btn-chat" onclick="showPage('chat')">
-        <span class="icon icon-chat"></span>
-      </button>
+      <div class="right-nav">
+        <button class="win-btn" onclick="minimizeWindow()">—</button>
+        <button class="win-btn" onclick="toggleMaximize()">▢</button>
+        <button class="win-btn win-close" onclick="closeWindow()">✕</button>
+      </div>
     </nav>
   </header>
 

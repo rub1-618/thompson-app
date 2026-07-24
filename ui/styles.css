@@ -520,3 +520,17 @@ input[type="color"]::-webkit-color-swatch {
     text-align: center;
     gap: 8px;
 }
+
+/* ! nav-win-btns */
+.win-btn {
+    width: 28px; 
+    height: 28px;
+    font-size: var(--fsize-mid);
+    color: var(--text-color);
+    opacity: 0.65;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+.win-btn:hover { opacity: 1; }
+.win-close:hover { color: var(--color-danger); opacity: 1; }

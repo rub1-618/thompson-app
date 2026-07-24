@@ -202,6 +202,10 @@ function renderTriggers() {
     });
 }
 
+function minimizeWindow() { invoke("minimize_window"); }
+function toggleMaximize() { invoke("toggle_maximize"); }
+function closeWindow()    { invoke("close_window"); }
+
 function openExternal(url) {
     invoke("open_url", { url });
 }
@@ -240,5 +244,8 @@ window.deleteCommand = deleteCommand;
 window.addTrigger = addTrigger;
 window.showPage = showPage;
 window.openExternal = openExternal;
+window.minimizeWindow = minimizeWindow;
+window.toggleMaximize = toggleMaximize;
+window.closeWindow = closeWindow;
 showPage("chat")
 init()

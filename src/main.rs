@@ -146,6 +146,15 @@ async fn delete_command(
 }
 
 #[tauri::command]
+fn toggle_maximize(window: tauri::WebviewWindow) -> Result<(), String> {
+    if window.is_maximized().map_err(|e| e.to_string())? {
+        window.unmaximize().map_err(|e| e.to_string())
+    } else {
+        window.maximize().map_err(|e| e.to_string())
+    }
+}
+
+#[tauri::command]
 fn minimize_window(window: tauri::WebviewWindow) -> Result<(), String> {
     window.minimize().map_err(|e| e.to_string())
 }
@@ -239,7 +248,7 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             execute_command, toggle_ai_mode, toggle_mute,
-            get_settings, save_settings, 
+            get_settings, save_settings, toggle_maximize,
             get_history, get_commands,
             save_command, delete_command,
             minimize_window, close_window,
