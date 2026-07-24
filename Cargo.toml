@@ -9,7 +9,7 @@ serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.13", features = ["json"] }
 rapidfuzz = "0.5.0"
 serde_json = "1.0"
-tauri = "2.11.5"
+tauri = { version = "2.11.5", features = [] }
 whisper-rs = "0.16.0"
 cpal = "0.18.1"
 chrono = "0.4.45"
@@ -18,9 +18,10 @@ sysinfo = "0.39.6"
 base64 = "0.23"
 image = "0.25.10"
 xcap = "0.9.7"
+dirs = "5"
 
 [build-dependencies]
-tauri-build = "2"
+tauri-build = { version = "2", features = [] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 mpris = "2.1.0"

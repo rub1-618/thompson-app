@@ -2,10 +2,7 @@ use std::{io::{Error, ErrorKind::{InvalidData, NotFound}}};
 use tokio::fs::{create_dir_all, read_to_string, rename, write};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_json::{to_string_pretty};
-
-const COMMANDS_PATH: &str = "./memory/commands.json";
-const HISTORY_PATH: &str = "./memory/history.json";
-const SETTINGS_PATH: &str = "./memory/settings.json";
+use std::path::{Path, PathBuf};
 
 const HISTORY_CAP: usize = 100;
 
@@ -57,7 +54,13 @@ pub enum Roles {
     Tom,
 }
 
-pub async fn load_json<T: DeserializeOwned + Default>(path: &str) -> Result<T, Error> {
+fn data_dir() -> PathBuf {
+    dirs::data_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join("thompson")
+}
+
+pub async fn load_json<T: DeserializeOwned + Default>(path: &Path) -> Result<T, Error> {
     let text = match read_to_string(path).await {
         Ok(s) => s,
         Err(e) => {
@@ -71,35 +74,36 @@ pub async fn load_json<T: DeserializeOwned + Default>(path: &str) -> Result<T, E
     serde_json::from_str(&text).map_err(|e| Error::new(InvalidData, e))
 }
 
-pub async fn save_json<T: Serialize>(path: &str, value: &T) -> Result<(), Error> {
+pub async fn save_json<T: Serialize>(path: &Path, value: &T) -> Result<(), Error> {
     let text = to_string_pretty(value).map_err(|e| Error::new(InvalidData, e))?;
-    let tmp_path = format!("{}.tmp", path);
+    let tmp_path = path.with_added_extension("tmp");
     write(&tmp_path, text).await?;
     rename(&tmp_path, path).await
 }
 
 impl MemoryStore {
     pub async fn load() ->  Result<Self, Error> {
-        create_dir_all("./memory").await?;
+        let dir = data_dir();
+        create_dir_all(&dir).await?;
         Ok(MemoryStore { 
-            settings: load_json(SETTINGS_PATH).await?, 
-            history: load_json(HISTORY_PATH).await?, 
-            commands: load_json(COMMANDS_PATH).await?,
+            settings: load_json(&dir.join("settings.json")).await?, 
+            history: load_json(&dir.join("history.json")).await?, 
+            commands: load_json(&dir.join("commands_json")).await?,
         })
     }
 
     pub async fn save_settings(&self) -> Result<(), Error> {
-        save_json(SETTINGS_PATH, &self.settings).await
+        save_json(&data_dir().join("settings.json"), &self.settings).await
     }
 
     pub async fn save_commands(&self) -> Result<(), Error> {
-       save_json(COMMANDS_PATH, &self.commands).await
+       save_json(&data_dir().join("commands_json"), &self.commands).await
     }
 
     pub async fn save_history(&mut self) -> Result<(), Error> {
         if self.history.len() > HISTORY_CAP {
             self.history.drain(..self.history.len() - HISTORY_CAP);
         }
-        save_json(HISTORY_PATH, &self.history).await
+        save_json(&data_dir().join("history.json"), &self.history).await
     }
 }
