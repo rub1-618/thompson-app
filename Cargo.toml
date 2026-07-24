@@ -26,7 +26,7 @@ tauri-build = "2"
 mpris = "2.1.0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-windows = { version = "0.85", features = [
+windows = { version = "0.58", features = [
     "Media_Control",
     "Foundation",
     "Foundation_Collections",
