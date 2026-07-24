@@ -24,6 +24,11 @@ input.addEventListener("keydown", async (e) => {
     sendCommand();
 });
 
+document.getElementById("cmd-trigger-input")
+    ?.addEventListener("keydown", async (e) => {
+    if (e.key === "Enter") addTrigger();
+});
+
 async function sendCommand() {
     if (!input.value.trim()) return;
     const text = input.value.trim();
@@ -119,6 +124,84 @@ async function saveSettings() {
     showPage("chat");
 }
 
+let newTriggers = [];
+
+async function saveCommand() {
+    const name = document.getElementById("cmd-name").value.trim();
+    const path = document.getElementById("cmd-path").value.trim();
+    if (!name || !path || !newTriggers.length) return;
+    await invoke("save_command", { name, path, triggers: newTriggers });
+    document.getElementById("cmd-name").value = "";
+    document.getElementById("cmd-path").value = "";
+    newTriggers = [];
+    renderTriggers();
+    loadCommands();
+}
+
+async function loadCommands() {
+    const cmds = await invoke("get_commands");
+    const list =document.getElementById("commands-list");
+    list.innerHTML = "";
+    if (!cmds.length) {
+        list.innerHTML = '<p class="cmd-empty">Поки що немає команд.</p>';
+        return;
+    }
+    cmds.forEach((c, i) => {
+        const item = document.createElement("div")
+        item.className = "cmd-item";
+
+        const info = document.createElement("div");
+        info.className = "cmd-info";
+        const name = document.createElement("strong"); name.textContent = c.name;
+        const trig = document.createElement("span"); trig.textContent = c.triggers.join(", ");
+        const path = document.createElement("code"); path.textContent = c.path;
+        info.append(name, trig, path);
+
+        const del = document.createElement("button");
+        del.className = "cmd-del";
+        del.textContent = "✕";
+        del.onclick = () => deleteCommand(i);
+
+        item.append(info, del);
+        list.appendChild(item);
+    });
+}
+
+async function deleteCommand(index) {
+    await invoke("delete_command", { index });
+    loadCommands();
+}
+
+function addTrigger() {
+    const input = document.getElementById("cmd-trigger-input");
+    const val = input.value.trim();
+    if (!val || newTriggers.includes(val)) return;
+    newTriggers.push(val);
+    input.value = "";
+    renderTriggers();
+}
+
+function removeTrigger(index) {
+    newTriggers.splice(index, 1);
+    renderTriggers();
+}
+
+function renderTriggers() {
+    const box = document.getElementById("trigger-chips");
+    box.innerHTML = "";
+    newTriggers.forEach((t, i) => {
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = t;
+        const x = document.createElement("button");
+        x.type = "button";
+        x.textContent = "✕";
+        x.onclick = () => removeTrigger(i);
+        chip.appendChild(x);
+        box.appendChild(chip);
+    });
+}
+
 function openExternal(url) {
     invoke("open_url", { url });
 }
@@ -142,6 +225,7 @@ function showPage(page) {
         el.classList.toggle("active", el.id === `page-${page}` )
     });
     if (page === "settings") loadSettings();
+    if (page === "commands") loadCommands();
 }
 
 listen("reminder", (e) => addMessage(`🔔 ${e.payload}`, "tom"))
@@ -151,6 +235,9 @@ listen("setStatus", (e) => setStatus(e.payload))
 window.toggleAiMode = toggleAiMode;
 window.toggleMute = toggleMute;
 window.toggleListening = toggleListening;
+window.saveCommand = saveCommand;
+window.deleteCommand = deleteCommand;
+window.addTrigger = addTrigger;
 window.showPage = showPage;
 window.openExternal = openExternal;
 showPage("chat")

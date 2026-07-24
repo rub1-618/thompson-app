@@ -32,7 +32,7 @@ pub struct SettingsEntry {
 
     #[serde(default)]
     pub mute_status: bool,
-    // todo: cloud_model: String,
+    
     #[serde(flatten)]
     pub map: serde_json::Map<String, serde_json::Value>,
 }

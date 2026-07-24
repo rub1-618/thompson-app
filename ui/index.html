@@ -9,9 +9,14 @@
 
   <header class="app-header" data-tauri-drag-region>
     <nav class="navbar">
-      <button id="btn-settings" onclick="showPage('settings')">
-        <span class="icon icon-settings"></span>
-      </button>
+      <div class="left-nav">
+        <button id="btn-settings" onclick="showPage('settings')">
+          <span class="icon icon-settings"></span>
+        </button>
+        <button id="btn-commands" onclick="showPage('commands')">
+          <span class="icon icon-commands"></span>
+        </button>
+      </div>
       <span id="status"></span>
       <button id="btn-chat" onclick="showPage('chat')">
         <span class="icon icon-chat"></span>
@@ -74,6 +79,32 @@
       <label>Другорядний: <input id="set-muted" type="color" /></label>
  
       <button onclick="saveSettings()">Зберегти</button>
+    </div>
+  </div>
+
+  <!--! custom cmds -->
+  <div id="page-commands" class="page">
+    <div class="commands-container">
+      <h2>Кастомні команди</h2>
+
+      <div class="command-form">
+        <label>Назва: <input id="cmd-name" type="text" placeholder="Відкрити термінал" /></label>
+        <label>Команда/шлях: <input id="cmd-path" type="text" placeholder="kitty" /></label>
+ 
+        <div class="cmd-block">
+          <label>Тригери:</label>
+          <div class="trigger-input">
+            <input id="cmd-trigger-input" type="text" placeholder="terminal" />
+            <button type="button" onclick="addTrigger()">+</button>
+          </div>
+          <div id="trigger-chips" class="trigger-chips"></div>
+        </div>
+
+        <button onclick="saveCommand()">Додати</button>
+      </div>
+
+      <div id="commands-list"></div>
+      
     </div>
   </div>
 
