@@ -37,9 +37,17 @@
             <span class="icon icon-vinput-off"></span>
           </button>
         </div>
-        <button id="btn-send" onclick="sendCommand()">
-          <span class="icon icon-send"></span>
-        </button>
+        <div class="right-controls">
+          <div class="aimode">
+            <span id="aimode-label" class="aimode-label">Ollama</span>
+            <button id="btn-aimode" class="switch" role="switch" aria-checked="false" onclick="toggleAiMode()">
+              <span class="switch-knob"></span>
+            </button>
+          </div>
+          <button id="btn-send" onclick="sendCommand()">
+            <span class="icon icon-send"></span>
+          </button>
+        </div>
       </div>  
     </div>
 
@@ -54,6 +62,9 @@
       <label>Модель: <input id="set-model" type="text" /></label>
       <p>Ви можете знайти багато моделей на <a id="ollama-href" href="#" onclick="openExternal('https://ollama.com/library?sort=popular'); return false;">https://ollama.com</a></p>
       
+      <!-- * cloud api -->
+      <label>Gemini API ключ: <input id="set-gemini-key" type="text" /></label>
+
       <!-- * themes -->
       <label>Акцент: <input id="set-accent" type="color" /></label>
       <label>Фон: <input id="set-bg" type="color" /></label>

@@ -37,6 +37,27 @@ async function sendCommand() {
     }
 }
 
+async function toggleAiMode() {
+    try {
+        const mode = await invoke("toggle_ai_mode");
+        setAiModeLabel(mode);
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function setAiModeLabel(mode) {
+    const on = mode === "gemini";
+    if (mode === "gemini") {
+        document.getElementById("aimode-label").textContent = "Gemini"
+    } else {
+        document.getElementById("aimode-label").textContent = "Ollama"
+    }
+    const sw = document.getElementById("btn-aimode");
+    sw.classList.toggle("on", on);
+    sw.setAttribute("aria-checked", on);
+}
+
 async function toggleMute() {
     try {
         const muted = await invoke("toggle_mute");
@@ -76,15 +97,16 @@ function setMuteIcon(muted) {
 
 async function loadSettings() {
     const s = await invoke("get_settings");
-    document.getElementById("set-model").value = s.local_model;
-    document.getElementById("set-accent").value = s.accent;
-    document.getElementById("set-bg").value = s.bg;
-    document.getElementById("set-muted").value = s.muted;
+    document.getElementById("set-model").value = s.local_model ?? "";
+    document.getElementById("set-gemini-key").value = s.gemini_key ?? "";    document.getElementById("set-accent").value = s.accent ?? "#9d9d9d";
+    document.getElementById("set-bg").value = s.bg ?? "#2a2a2a";
+    document.getElementById("set-muted").value = s.muted ?? "#4f4f4f";
 }
 
 async function saveSettings() {
     const data = {
         local_model: document.getElementById("set-model").value,
+        gemini_key: document.getElementById("set-gemini-key").value,
         accent: document.getElementById("set-accent").value,
         bg: document.getElementById("set-bg").value,
         muted: document.getElementById("set-muted").value,
@@ -108,6 +130,7 @@ function applyTheme(s) {
 async function init() {
     const s = await invoke("get_settings");
     applyTheme(s);
+    setAiModeLabel(s.ai_mode);
     setMuteIcon(s.mute_status);
 }
 
@@ -122,6 +145,7 @@ listen("reminder", (e) => addMessage(`🔔 ${e.payload}`, "tom"))
 listen("addMessage", (e) => addMessage(e.payload[0], e.payload[1]))
 listen("setStatus", (e) => setStatus(e.payload))
 
+window.toggleAiMode = toggleAiMode;
 window.toggleMute = toggleMute;
 window.toggleListening = toggleListening;
 window.showPage = showPage;

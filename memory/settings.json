@@ -3,6 +3,8 @@
   "bg": "#2a2a2a",
   "muted": "#4f4f4f",
   "local_model": "llama3.2:1b",
-  "mute_status": false,
+  "ai_mode": "ollama",
+  "gemini_key": "AQ.Ab8RN6KSmcPCkFF5bVWhkf5MqpbTT3JoKhLqJo7XhPj7QFp_kA",
+  "mute_status": true,
   "trash_key": "123"
 }

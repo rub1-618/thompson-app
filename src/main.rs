@@ -42,6 +42,15 @@ async fn execute_command(
 }
 
 #[tauri::command]
+async fn toggle_ai_mode(state: State<'_, Mutex<AppState>>) -> Result<String, String> {
+    let mut guard = state.lock().await;
+    let next = if guard.store.settings.ai_mode == "gemini" { "ollama" } else { "gemini" };
+    guard.store.settings.ai_mode = next.to_string();
+    guard.store.save_settings().await.map_err(|e| e.to_string())?;
+    Ok(next.to_string())
+}
+
+#[tauri::command]
 async fn toggle_mute(
     state: State<'_, Mutex<AppState>>,
 ) -> Result<bool, String> {
@@ -222,7 +231,7 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            execute_command, toggle_mute,
+            execute_command, toggle_ai_mode, toggle_mute,
             get_settings, save_settings, 
             get_history, get_commands,
             save_command, delete_command,

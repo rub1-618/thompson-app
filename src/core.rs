@@ -21,7 +21,14 @@ pub struct SettingsEntry {
     pub accent: String,
     pub bg: String,
     pub muted: String,
+    
     pub local_model: String,
+
+    #[serde(default)]
+    pub ai_mode: String,
+
+    #[serde(default)]
+    pub gemini_key: String,
 
     #[serde(default)]
     pub mute_status: bool,
