@@ -8,7 +8,7 @@
 <body>
 
   <header class="app-header" data-tauri-drag-region>
-    <nav class="navbar">
+    <nav class="navbar" data-tauri-drag-region>
       <div class="left-nav">
         <button id="btn-settings" onclick="showPage('settings')">
           <span class="icon icon-settings"></span>
@@ -20,7 +20,7 @@
           <span class="icon icon-chat"></span>
         </button>
       </div>
-      <span id="status"></span>
+      <span id="status" data-tauri-drag-region></span>
       <div class="right-nav">
         <button class="win-btn" onclick="minimizeWindow()">—</button>
         <button class="win-btn" onclick="toggleMaximize()">▢</button>

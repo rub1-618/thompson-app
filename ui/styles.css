@@ -71,6 +71,7 @@ body {
 }
 
 .msg-input {
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -391,14 +392,40 @@ body {
 
 #page-chat.active {
     flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
 }
 
 .chat {
     flex: 1;
+    min-height: 0;
+    display: flex;
     overflow-y: auto;
     padding: 18px;
+}
+
+#log {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+#log::-webkit-scrollbar {
+    width: 8px;
+}
+
+#log::-webkit-scrollbar-thumb {
+    background: var(--muted);
+    border-radius: var(--border-radius);
+}
+
+#log::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#log::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
 }
 
 /*! settings page */
