@@ -321,7 +321,7 @@ body {
     gap: 16px;
 }
 
-#set-model, #set-gemini-key {
+#set-model, #set-gemini-key, #set-whisper-model {
     background: var(--bg);
     font-family: var(--font);
     color: var(--text-color);
@@ -329,6 +329,12 @@ body {
     border: none;
     border-radius: var(--border-radius);
     outline: none;
+}
+
+#set-model::placeholder, #set-whisper-model::placeholder {
+    color:var(--muted);
+    font-family: var(--font);
+    font-style: italic;
 }
 
 #page-settings label {

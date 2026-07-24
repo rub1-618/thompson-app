@@ -5,6 +5,5 @@
   "local_model": "llama3.2:1b",
   "ai_mode": "ollama",
   "gemini_key": "AQ.Ab8RN6KSmcPCkFF5bVWhkf5MqpbTT3JoKhLqJo7XhPj7QFp_kA",
-  "mute_status": true,
-  "trash_key": "123"
+  "mute_status": true
 }

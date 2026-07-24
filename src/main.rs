@@ -22,6 +22,7 @@ struct VoiceControl {
     running: std::sync::Arc<std::sync::atomic::AtomicBool>,
     events: tokio::sync::mpsc::UnboundedSender<voice::VoiceEvent>,
     tts_speaking: std::sync::Arc::<std::sync::atomic::AtomicBool>,
+    model_path: String,
 }
 
 #[tauri::command]
@@ -70,7 +71,8 @@ fn toggle_listening(control: State<'_, VoiceControl>) -> Result<bool, String> {
         let running = control.running.clone();
         let events = control.events.clone();
         let speaking = control.tts_speaking.clone();
-        std::thread::spawn(move || voice::listen_loop(running, events, speaking));
+        let model_path = control.model_path.clone();
+        std::thread::spawn(move || voice::listen_loop(running, events, speaking, model_path));
     }
     Ok(status)
 }
@@ -183,11 +185,16 @@ fn main() {
     let tts_speaking = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
     let tts = tts::spawn_tts(voice, rate, tts_speaking.clone());
     let _ = tts.send(tts::TtsCommand::SetMute(store.settings.mute_status));
+    let model_path = store.settings.map.get("model_path")
+        .and_then(|v| v.as_str())
+        .filter(|s| !s.is_empty())
+        .unwrap_or("models/ggml-base.bin").to_string();
     let state = Mutex::new(AppState {dispatcher, store, tts});
     let voice_control = VoiceControl {
        running: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
        events: voice_tx,
        tts_speaking,
+       model_path,
     };
 
     tauri::Builder::default()

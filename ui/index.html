@@ -59,11 +59,14 @@
     <div class="settings-container">
 
       <!-- * models -->
-      <label>Модель: <input id="set-model" type="text" /></label>
+      <label>Модель: <input id="set-model" type="text" placeholder="llama3.2:1b" /></label>
       <p>Ви можете знайти багато моделей на <a id="ollama-href" href="#" onclick="openExternal('https://ollama.com/library?sort=popular'); return false;">https://ollama.com</a></p>
       
       <!-- * cloud api -->
       <label>Gemini API ключ: <input id="set-gemini-key" type="text" /></label>
+
+      <!-- * whisper model -->
+      <label>Модель розпізнавання: <input id="set-whisper-model" type="text" placeholder="models/ggml-base.bin" /></label>
 
       <!-- * themes -->
       <label>Акцент: <input id="set-accent" type="color" /></label>

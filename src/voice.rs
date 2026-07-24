@@ -6,7 +6,6 @@ use tokio::sync::mpsc::UnboundedSender;
 use whisper_rs::{FullParams, SamplingStrategy, WhisperContext, WhisperContextParameters};
 use rapidfuzz::fuzz::ratio;
 
-const MODEL_PATH: &str = "models/ggml-base.bin";
 const SPEECH_START: f32 = 0.008;
 const SPEECH_END: f32 = 0.004;
 const SILENCE_MS: usize = 800;
@@ -116,7 +115,8 @@ fn transcribe(state: &mut whisper_rs::WhisperState, audio: &[f32]) -> String {
     text
 }
 
-pub fn listen_loop(running: Arc<AtomicBool>, events: UnboundedSender<VoiceEvent>, speaking: Arc<AtomicBool>) {
+pub fn listen_loop(running: Arc<AtomicBool>, events: UnboundedSender<VoiceEvent>, 
+    speaking: Arc<AtomicBool>, model_path: String) {
     let host = cpal::default_host();
     let device = match host.default_input_device() {
         Some(d) => d,
@@ -144,7 +144,7 @@ pub fn listen_loop(running: Arc<AtomicBool>, events: UnboundedSender<VoiceEvent>
     stream.play().expect("play");
 
     let ctx = WhisperContext::new_with_params(
-        MODEL_PATH,
+        &model_path,
         WhisperContextParameters::default(),
     ).expect("whisper model");
     let mut wstate = ctx.create_state().expect("state");

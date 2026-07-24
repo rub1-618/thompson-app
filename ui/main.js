@@ -98,7 +98,9 @@ function setMuteIcon(muted) {
 async function loadSettings() {
     const s = await invoke("get_settings");
     document.getElementById("set-model").value = s.local_model ?? "";
-    document.getElementById("set-gemini-key").value = s.gemini_key ?? "";    document.getElementById("set-accent").value = s.accent ?? "#9d9d9d";
+    document.getElementById("set-gemini-key").value = s.gemini_key ?? "";   
+    document.getElementById("set-whisper-model").value = s.model_path ?? "";
+    document.getElementById("set-accent").value = s.accent ?? "#9d9d9d";
     document.getElementById("set-bg").value = s.bg ?? "#2a2a2a";
     document.getElementById("set-muted").value = s.muted ?? "#4f4f4f";
 }
@@ -107,6 +109,7 @@ async function saveSettings() {
     const data = {
         local_model: document.getElementById("set-model").value,
         gemini_key: document.getElementById("set-gemini-key").value,
+        model_path: document.getElementById("set-whisper-model").value,
         accent: document.getElementById("set-accent").value,
         bg: document.getElementById("set-bg").value,
         muted: document.getElementById("set-muted").value,
