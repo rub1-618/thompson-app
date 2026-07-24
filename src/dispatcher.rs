@@ -55,7 +55,10 @@ impl Dispatcher {
         }
 
         if let Some((cmd, _)) = find_command(text) {
-            return self.run_builtin(cmd, text);
+            return match cmd {
+                Command::Screen => crate::auto::screen(&store.settings).await,
+                _ => return self.run_builtin(cmd, text)
+            }
         }
 
         if let Some((name, path)) = find_custom(text, store) {
@@ -101,7 +104,7 @@ impl Dispatcher {
             
             Command::WindowOpen | Command::WindowHide
             | Command::WindowClose => crate::auto::window(text),
-            Command::Screen => crate::auto::screen(),
+            Command::Screen => String::new(),
             Command::MusicToggle => crate::auto::music_toggle(),
             Command::MusicNext => crate::auto::music_next(),
             Command::MusicPrev => crate::auto::music_prev(),

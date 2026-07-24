@@ -1,0 +1,29 @@
+use xcap::Monitor;
+use base64::{engine::general_purpose::STANDARD, Engine};
+use std::io::Cursor;
+
+fn main() {
+    let monitors = match Monitor::all() {
+        Ok(m) => m,
+        Err(e) => return println!("{}", e),
+    };
+    println!("Monitors found: {:?}", monitors);
+
+    let monitor = match monitors.into_iter().next() {
+        Some(m) => m,
+        None => return println!("Monitor not found."),
+    };
+
+    let image = match monitor.capture_image() {
+        Ok(i) => i,
+        Err(e) => return println!("{}", e),
+    };
+
+    let mut buf = Cursor::new(Vec::new());
+    image.write_to(&mut buf, image::ImageFormat::Png).map_err(|e| e.to_string()).unwrap_or_default();
+
+    let base64_str = STANDARD.encode(buf.into_inner());
+
+    println!("{}", base64_str);
+}
+

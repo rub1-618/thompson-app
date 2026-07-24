@@ -177,3 +177,51 @@ pub async fn ask_gemini(prompt: &str, history: &[HistoryEntry], settings: &Setti
         "Не вдалось отримати відповідь.".to_string()
     } else { text }
 }
+
+// ! cloud gemini-vision ai
+
+pub async fn ask_gemini_vision(image_b64: &str, prompt: &str, settings: &SettingsEntry) -> String {
+    if settings.gemini_key.is_empty() {
+        return "API-ключ для Gemini не знайдено.".to_string()
+    }
+    let model = settings.map.get("gemini_model")
+        .and_then(|v| v.as_str()).unwrap_or("gemini-2.0-flash");
+
+    let body = serde_json::json!({
+        "contents": [{
+            "parts": [
+                { "text": &prompt.to_string() },
+                { "inline_data" : { "mime_type": "image/png", "data": image_b64 } }
+            ]
+        }]
+    });
+
+    let url = format!(
+        "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={}",
+        settings.gemini_key
+    );
+
+    let resp = match::reqwest::Client::new().post(&url).json(&body).send().await {
+        Ok(r) => r,
+        Err(_) => return "Gemini: сервери переповнені.".to_string(),
+    };
+    match resp.status().as_u16() {
+        200 => {}
+        429 => return "Gemini: перевищено квоту, спробуйте пізніше.".to_string(),
+        400 | 403 => return "Ви на авторизованi або невказаний ключ.".to_string(),
+        _ => return "Gemini: сервери переповнені.".to_string(),
+    };
+
+    let parsed: GeminiResponse = match resp.json().await {
+        Ok(p) => p,
+        Err(_) => return "Gemini: сервери переповнені.".to_string(),
+    };
+    let text = parsed.candidates.first()
+        .and_then(|c| c.content.parts.first())
+        .map(|p| p.text.trim().to_string())
+        .unwrap_or_default();
+
+    if text.is_empty() {
+        "Не вдалось отримати відповідь.".to_string()
+    } else { text }
+}

@@ -1,9 +1,12 @@
-use sysinfo::{Components, System, MINIMUM_CPU_UPDATE_INTERVAL}; // stats
+use crate::core::SettingsEntry;
+
+// ! stats-getting
+
+use sysinfo::{Components, MINIMUM_CPU_UPDATE_INTERVAL, System}; // stats
 
 pub fn stats() -> String {
     let mut sys = System::new();
 
-    // ! CPU
     sys.refresh_cpu_all();
     std::thread::sleep(MINIMUM_CPU_UPDATE_INTERVAL);
     sys.refresh_cpu_all();
@@ -33,16 +36,59 @@ fn cpu_temp() -> Option<f32> {
     None
 }
 
+// ! window manipulations | in future
+
 pub fn window(text: &str) -> String {
     // todo: win32 / compositor on Linux;
     let _ = text;
     "Керування вікнами ще не реалізовано.".to_string()
 }
 
-pub fn screen() -> String {
-    // todo: screenshot + Gemini Vision (future)
-    "Аналіз екрану ще не доступний.".to_string()
+// ! screen analysis with Gemini Vision
+
+use xcap::Monitor;
+use base64::{engine::general_purpose::STANDARD, Engine};
+use std::io::Cursor;
+
+pub async fn screen(settings: &SettingsEntry) -> String {
+    let b64 = match tokio::task::spawn_blocking(capture_screen_base64).await {
+        Ok(Ok(s)) => s,
+        Ok(Err(e)) => return format!("Не вдалось зробити скріншот: {}", e),
+        Err(_) => return "Помилка захоплення екрана.".to_string(),
+    };
+
+    crate::ai::ask_gemini_vision(
+        &b64, 
+        "Що ти бачиш на цьому скріншоті? Опиши коротко.", 
+        settings
+    ).await
 }
+
+pub fn capture_screen_base64() -> Result<String, String> {
+    let monitors = match Monitor::all() {
+        Ok(m) => m,
+        Err(e) => return Err(format!("{}", e)),
+    };
+
+    let monitor = match monitors.into_iter().next() {
+        Some(m) => m,
+        None => return Err("Monitor not found.".to_string()),
+    };
+
+    let image = match monitor.capture_image() {
+        Ok(i) => i,
+        Err(e) => return Err(format!("{}", e)),
+    };
+
+    let mut buf = Cursor::new(Vec::new());
+    image.write_to(&mut buf, image::ImageFormat::Png).map_err(|e| e.to_string()).unwrap_or_default();
+
+    let base64_str = STANDARD.encode(buf.into_inner());
+
+    Ok(base64_str)
+}
+
+// ! music manipulations
 
 #[cfg(not(target_os = "windows"))]
 mod music_impl {
