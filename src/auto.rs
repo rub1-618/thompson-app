@@ -91,7 +91,7 @@ pub fn capture_screen_base64() -> Result<String, String> {
 // ! music manipulations
 
 #[cfg(not(target_os = "windows"))]
-mod music_impl {
+mod media_impl {
     use mpris::{Player, PlayerFinder};
     
     fn active_player() -> Result<Player, String> {
@@ -99,7 +99,7 @@ mod music_impl {
         finder.find_active().map_err(|e| e.to_string())
     }
 
-    pub fn toggle() -> String {
+    pub fn media_toggle() -> String {
         match active_player() {
             Ok(pl) => match pl.play_pause() {
                 Ok(_) => "Музика перемкнена".to_string(),
@@ -148,15 +148,36 @@ mod music_impl {
             format!("Зараз грає: {title} від {artist}.")
         }
     }
+
+    pub fn sound_toggle() -> String {
+        match std::process::Command::new("wpctl")
+            .args([
+                "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"
+            ]).status()
+                {
+                    Ok(s) => {
+                        if s.success() {
+                            "Звук перемкнено.".to_string()
+                        } else {
+                            "Не вдалося керувати звуком.".to_string()
+                        }
+                    },
+                    _ => "Не вдалося керувати звуком.".to_string()
+                }
+    }
 }
 
 #[cfg(target_os = "windows")]
-mod music_impl {
-    use windows::Win32::UI::Input::KeyboardAndMouse::{keybd_event, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP, VK_MEDIA_NEXT_TRACK, VK_MEDIA_PREV_TRACK, VK_MEDIA_PLAY_PAUSE};
+mod media_impl {
+    use windows::Win32::UI::Input::KeyboardAndMouse::{
+        keybd_event, 
+        KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP, 
+        VK_MEDIA_NEXT_TRACK, VK_MEDIA_PREV_TRACK, 
+        VK_MEDIA_PLAY_PAUSE, VK_VOLUME_MUTE,
+    };
     use windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager;
 
-
-    pub fn toggle() -> String {
+    pub fn media_toggle() -> String {
         unsafe {
             keybd_event(VK_MEDIA_PLAY_PAUSE.0 as u8, 0, KEYBD_EVENT_FLAGS(0), 0);
             keybd_event(VK_MEDIA_PLAY_PAUSE.0 as u8, 0, KEYEVENTF_KEYUP, 0);
@@ -207,9 +228,18 @@ mod music_impl {
             format!("Зараз грає: {title} від {artist}.")
         }
     }
+
+    pub fn sound_toggle() -> String {
+        unsafe {
+            keybd_event(VK_VOLUME_MUTE.0 as u8, 0, KEYBD_EVENT_FLAGS(0), 0);
+            keybd_event(VK_VOLUME_MUTE.0 as u8, 0, KEYEVENTF_KEYUP, 0);
+        }
+        "Звук перемкнено.".to_string()
+    }
 }
 
-pub fn music_toggle() -> String { music_impl::toggle() }
-pub fn music_next()   -> String { music_impl::next() }
-pub fn music_prev()   -> String { music_impl::prev() }
-pub fn music_info()   -> String { music_impl::info() }
+pub fn music_toggle() -> String { media_impl::media_toggle() }
+pub fn music_next()   -> String { media_impl::next() }
+pub fn music_prev()   -> String { media_impl::prev() }
+pub fn music_info()   -> String { media_impl::info() }
+pub fn sound_toggle() -> String { media_impl::sound_toggle() }

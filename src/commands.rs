@@ -14,11 +14,12 @@ pub enum Command {
     Remind,
     OpenBrowser,
     Dictation,
+    ToggleSound,
 }
 
 pub static CMDS: &[(Command, &[&str])] = &[
     (Command::Stop, &[
-        "стоп", "стій", "зупинись", "замовчи", "тихо", "мовчи",
+        "стоп", "стій", "зупинись", "замовчи", "shut up", "тихо", "мовчи",
         "stop speaking", "stop",
     ]),
     (Command::Ctime, &[
@@ -64,6 +65,10 @@ pub static CMDS: &[(Command, &[&str])] = &[
         "відкрий браузер", "open browser", "браузер",
     ]),
     (Command::Dictation, &[
-        "напиши", "надрукуй", "введи текст", "type this", "print this",
+        "напиши", "надрукуй", "введи текст", "type this", "print this", "type",
+    ]),
+    (Command::ToggleSound, &[
+        "вимкни звук", "вимкнути звук", "увімкнути звук", 
+        "shut the sound down", "turn on the sound", "sound", "volume",
     ]),
 ];

@@ -109,7 +109,7 @@ impl Dispatcher {
             Command::MusicNext => crate::auto::music_next(),
             Command::MusicPrev => crate::auto::music_prev(),
             Command::MusicInfo => crate::auto::music_info(),
-            
+            Command::ToggleSound => crate::auto::sound_toggle(),
         }
     }
 }
@@ -133,8 +133,10 @@ fn run_custom(name: &str, path: &str) -> String {
 }
 
 fn parse_reminder(text: &str) -> (u64, String) {
-    const SKIP: [&str; 16] = ["нагади", "нагадай", "нагадування", "remind",  "me", "reminder",
-        "встанови", "нагадування", "через", "in", "after", "хв", "хвилин", "minutes", "хвилину", "хвилини"];
+    const SKIP: [&str; 18] = ["нагади", "нагадай", "нагадування", 
+        "remind",  "me", "reminder", "встанови", "нагадування", 
+        "через", "in", "after", "хв", "хвилин", "min", "mins",
+        "minutes", "хвилину", "хвилини"];
     let mut minutes: Option<u64> = None;
     let mut label_words: Vec<&str> = Vec::new();
     for word in text.split_whitespace() {
@@ -159,7 +161,7 @@ fn parse_reminder(text: &str) -> (u64, String) {
 }
 
 fn strip_dictation_trigger(text: &str) -> &str {
-    const TRIGGERS: [&str; 5] = ["напиши", "надрукуй", "введи текст", "type this", "print this"];
+    const TRIGGERS: [&str; 6] = ["напиши", "надрукуй", "введи текст", "type this", "print this", "type"];
     let lower= text.to_lowercase();
     for trigger in TRIGGERS {
         if lower.starts_with(trigger) {
@@ -270,18 +272,40 @@ use crate::{commands::Command, dispatcher::{CMD_THRESHOLD, find_command, parse_r
     }
 
     #[test]
+    fn test_cmds() {
+        let cases = [
+            ( "стоп",               Command::Stop ),
+            ( "котра година",       Command::Ctime ),
+            ( "статистика",         Command::Stats ),
+            ( "що на екрані",       Command::Screen ),
+            ( "музика",             Command::MusicToggle ),
+            ( "наступний трек",     Command::MusicNext ),
+            ( "попередній трек",    Command::MusicPrev ),
+            ( "який трек",          Command::MusicInfo ),
+            ( "нагадування",        Command::Remind ),
+            ( "відкрий браузер",    Command::OpenBrowser ),
+            ( "увімкнути звук",     Command::ToggleSound ),
+            // todo dictation, windows
+        ];
+        for ( phrase, expected ) in cases {
+            let (cmd, _) = find_command(phrase).unwrap_or_else(|| panic!("No match for a command!"));
+            assert_eq!(cmd, expected);
+        }
+    }
+
+    #[test]
     fn test_dt_inline() {
-        assert_eq!(strip_dictation_trigger("напиши привіт світ"), "привіт світ")
+        assert_eq!(strip_dictation_trigger("type hello world"), "hello world")
     }
 
     #[test]
     fn test_dt_none() {
-        assert_eq!(strip_dictation_trigger("напиши"), "")
+        assert_eq!(strip_dictation_trigger("print this"), "")
     }
 
     #[test]
     fn test_dt_highcase() {
-        assert_eq!(strip_dictation_trigger("Напиши Привіт Іване"), "Привіт Іване")
+        assert_eq!(strip_dictation_trigger("Type HELLO WORLD"), "HELLO WORLD")
     }
     
     #[test]
@@ -292,15 +316,15 @@ use crate::{commands::Command, dispatcher::{CMD_THRESHOLD, find_command, parse_r
     #[test]
     fn test_reminder() {
         assert_eq!(
-            parse_reminder("нагадай через 3 хв випити чай"),
-            (3, "випити чай".to_string())
+            parse_reminder("remind me in 5 minutes to drink tea"),
+            (5, "to drink tea".to_string())
         );
     }
 
     #[test]
     fn test_reminder_no_label() {
         assert_eq!(
-            parse_reminder("нагадай через 5 хв"),
+            parse_reminder("remind me in 5 mins"),
             (5, "Час минув!".to_string())
         );
     }
@@ -308,15 +332,7 @@ use crate::{commands::Command, dispatcher::{CMD_THRESHOLD, find_command, parse_r
     #[test]
     fn test_reminder_no_time() {
         assert_eq!(
-            parse_reminder("нагадай випити чай"),
-            (5, "випити чай".to_string())
-        );
-    }
-
-    #[test]
-    fn test_reminder_eng() {
-        assert_eq!(
-            parse_reminder("remind me in 5 minutes to drink tea"),
+            parse_reminder("remind me to drink tea"),
             (5, "to drink tea".to_string())
         );
     }
