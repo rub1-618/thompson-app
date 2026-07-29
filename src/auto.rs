@@ -185,13 +185,12 @@ mod window_impl {
 #[cfg(target_os = "windows")]
 mod window_impl {
     use super::WindowAction;
-    use std::process::Command;
     use windows::Win32::Foundation::{HWND, LPARAM, BOOL, WPARAM};
     use windows::Win32::UI::WindowsAndMessaging::{
         EnumWindows, GetWindowTextW, IsWindowVisible,
         ShowWindow, PostMessageW, SW_MINIMIZE, WM_CLOSE,
     };
-    use windows::Win32::UI::Shell::{ShellExecuteExW, SHELLEXECUTEINFOW, SEE_MASK_FLAG_NO_UI};
+    use windows::Win32::UI::Shell::{ShellExecuteW, SHELLEXECUTEINFOW, SEE_MASK_FLAG_NO_UI};
     use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
     use windows::core::{HSTRING, PCWSTR, w};
 
