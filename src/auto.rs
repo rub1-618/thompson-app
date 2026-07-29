@@ -1,4 +1,5 @@
 use crate::core::SettingsEntry;
+use crate::commands::Command;
 
 // ! stats-getting
 
@@ -36,12 +37,105 @@ fn cpu_temp() -> Option<f32> {
     None
 }
 
-// ! window manipulations | in future
+// ! window manipulation
 
-pub fn window(text: &str) -> String {
-    // todo: win32 / compositor on Linux;
-    let _ = text;
-    "Керування вікнами ще не реалізовано.".to_string()
+#[derive(Clone, Copy)]
+enum WindowAction { Show, Hide, Close }
+
+pub fn window(cmd: Command, text: &str) -> String {
+    let action = match cmd {
+        Command::WindowOpen  => WindowAction::Show,
+        Command::WindowHide  => WindowAction::Hide,
+        Command::WindowClose => WindowAction::Close,
+        _ => unreachable!()
+    };
+    let title = strip_window_trigger(text);
+    if title.is_empty() {
+        return "Вкажіть назву вікна.".to_string();
+    }
+    window_impl::apply(action, &title)
+}
+
+fn strip_window_trigger(text: &str) -> String {
+    const TRIGGERS: [&str; 8] = [
+        "закрий вікно", "мінімізуй", 
+        "заховай вікно", "згорни вікно", 
+        "сховай вікно", "відкрий вікно", 
+        "покажи вікно", "переключи вікно"
+    ];
+    let lower= text.to_lowercase();
+    for trigger in TRIGGERS {
+        if lower.starts_with(trigger) {
+            return text[trigger.len()..].trim_start().to_lowercase().to_string()
+        }
+    }
+    "".to_string()
+}
+
+#[cfg(not(target_os = "windows"))]
+mod window_impl {
+    use super::WindowAction;
+    use std::process::Command;
+
+    pub fn apply(action: WindowAction, title: &str) -> String {
+        if let WindowAction::Show = action {
+            return match Command::new(title).spawn() {
+                Ok(_) => format!("Відкриваю «{title}»."),
+                Err(_) => format!("Не вдалося відкрити «{title}»."),
+            };
+        }
+        let out = match Command::new("xdotool")
+            .args(["search", "--onlyvisible", "--name", title])
+            .output()
+                {
+                    Ok(o) => o,
+                    Err(_) => return "xdotool не встановлено.".to_string(),
+                };
+        let ids = String::from_utf8_lossy(&out.stdout);
+        let id = match ids.lines().next() {
+            Some(id) => {
+                if !id.is_empty() {
+                    id
+                } else {
+                    return format!("Вікно «{title}» не знайдено.")
+                }
+            }
+            _ => return format!("Вікно «{title}» не знайдено.")
+        };
+
+        let sub = match action {
+            WindowAction::Hide  => "windowminimize",
+            WindowAction::Close => "windowclose",
+            WindowAction::Show  => unreachable!(),
+        };
+        match Command::new("xdotool").args([sub, id]).status() {
+            Ok(s) => {
+                if s.success() {
+                    "Готово.".to_string()
+                } else {
+                    "Не вдалося керувати вікном.".to_string()
+                }
+            }
+            _ => "Не вдалося керувати вікном.".to_string()
+        }
+    }
+}
+
+#[cfg(target_os = "windows")]
+mod window_impl {
+    use super::WindowAction;
+    use std::process::Command;
+
+    pub fn apply(action: WindowAction, title: &str) -> String {
+        if let WindowAction::Show = action {
+            return match Command::new("cmd").
+                args(["/C", "start", "", title]).spawn() {
+                Ok(_) => format!("Відкриваю «{title}»."),
+                Err(_) => format!("Не вдалося відкрити «{title}»."),
+            };
+        }
+        "not yet".to_string()
+    }
 }
 
 // ! screen analysis with Gemini Vision

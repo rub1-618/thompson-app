@@ -103,7 +103,7 @@ impl Dispatcher {
             }
             
             Command::WindowOpen | Command::WindowHide
-            | Command::WindowClose => crate::auto::window(text),
+            | Command::WindowClose => crate::auto::window(cmd, text),
             Command::Screen => String::new(),
             Command::MusicToggle => crate::auto::music_toggle(),
             Command::MusicNext => crate::auto::music_next(),
