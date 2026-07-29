@@ -191,6 +191,9 @@ mod window_impl {
         EnumWindows, GetWindowTextW, IsWindowVisible,
         ShowWindow, PostMessageW, SW_MINIMIZE, WM_CLOSE,
     };
+    use windows::Win32::UI::Shell::{ShellExecuteExW, SHELLEXECUTEINFOW, SEE_MASK_FLAG_NO_UI};
+    use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+    use windows::core::{HSTRING, PCWSTR, w};
 
     struct Search<'a> {
         needle: &'a str,
@@ -219,10 +222,7 @@ mod window_impl {
 
     pub fn apply(action: WindowAction, title: &str) -> String {
         if let WindowAction::Show = action {
-            return match Command::new(title).spawn() {
-                Ok(_) => format!("Відкриваю «{title}»."),
-                Err(_) => format!("Не вдалося відкрити «{title}»."),
-            };
+            return win_show(title);
         }
 
         let mut search = Search { needle: title, found: None };
@@ -250,6 +250,22 @@ mod window_impl {
         } else {
             "Не вдалося керувати вікном.".to_string()
         }
+    }
+
+    fn win_show(title: &str) -> String {
+        let file = HSTRING::from(title);
+        let mut sei = SHELLEXECUTEINFOW {
+            cbSize: std::mem::size_of::<SHELLEXECUTEINFOW>() as u32,
+            fMask:  SEE_MASK_FLAG_NO_UI,
+            lpVerb: w!("open"),
+            lpFile: PCWSTR(file.as_ptr()),
+            nShow: SW_SHOWNORMAL.0, 
+            ..Default::default()
+        };
+        match unsafe { ShellExecuteExW(&mut sei) } {
+            Ok(_) => format!("Відкриваю «{title}»."),
+            Err(_) => format!("Не вдалося відкрити «{title}»."),
+        };
     }
 }
 
