@@ -173,9 +173,9 @@ fn strip_dictation_trigger(text: &str) -> &str {
 
 fn continue_dictation(text: &str) -> String {
     if match_whole_phrase(text, &CANCEL_PHRASES, CANCEL_THRESHOLD) {
-            return "Скасовано.".to_string();
+        return "Скасовано.".to_string();
     }
-    format!("Надруковано: {text}")
+    crate::auto::dictate(text)
 }
 
 pub fn find_command(text: &str) -> Option<(Command, f64)> {

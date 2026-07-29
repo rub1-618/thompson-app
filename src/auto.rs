@@ -37,6 +37,80 @@ fn cpu_temp() -> Option<f32> {
     None
 }
 
+// ! audio keyboard input
+
+pub fn dictate(text: &str) -> String {
+    std::thread::sleep(std::time::Duration::from_millis(1000));
+    dictate_impl::type_text(text)
+}
+
+#[cfg(not(target_os = "windows"))]
+mod dictate_impl {
+    use std::process::Command;
+
+    pub fn type_text(text: &str) -> String {
+        let wayland = std::env::var("WAYLAND_DISPLAY").is_ok();
+        let status = if wayland {
+            Command::new("wtype").arg(text).status()
+        } else {
+            Command::new("xdotool")
+                .args(["type", "--clearmodifiers", "--", text])
+                .status()
+        };
+        match status {
+            Ok(s) => {
+                if s.success() {
+                    format!("Надруковано {text}.")
+                } else {
+                    "Не вдалося надрукувати текст.".to_string()
+                }
+            }
+            Err(_) => "Немає інструмента для друку (встанови wtype/xdotool).".to_string()
+        }
+
+    }
+}
+
+#[cfg(target_os = "windows")]
+mod dictate_impl {
+    use windows::Win32::UI::Input::KeyboardAndMouse::{
+        SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT,
+        KEYBD_EVENT_FLAGS, KEYEVENTF_UNICODE, KEYEVENTF_KEYUP, VIRTUAL_KEY,
+    };
+
+    fn key_event(unit: u16, flags: KEYBD_EVENT_FLAGS) -> INPUT {
+        INPUT {
+            r#type: INPUT_KEYBOARD,
+            Anonymous: INPUT_0 {
+                ki: KEYBDINPUT {
+                    wVk: VIRTUAL_KEY(0),
+                    wScan: unit,
+                    dwFlags: flags,
+                    time: 0,
+                    dwExtraInfo: 0,
+                },
+            },
+        }
+    }
+
+    pub fn type_text(text: &str) -> String {
+        let mut inputs: Vec<INPUT> = Vec::new();
+        for unit in text.encode_utf16() {
+            inputs.push(key_event(unit, KEYEVENTF_UNICODE));
+            inputs.push(key_event(unit, KEYEVENTF_UNICODE | KEYEVENTF_KEYUP));
+        }
+        if inputs.is_empty() {
+            return format!("Надруковано «{text}».");
+        }
+        let sent = unsafe { SendInput(&inputs, std::mem::size_of::<INPUT>() as i32) };
+        if sent as usize == inputs.len() {
+            format!("Надруковано «{text}».")
+        } else {
+            "Не вдалося надрукувати текст.".to_string()
+        }
+    }
+}
+
 // ! window manipulation
 
 #[derive(Clone, Copy)]
