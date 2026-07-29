@@ -190,7 +190,7 @@ mod window_impl {
         EnumWindows, GetWindowTextW, IsWindowVisible,
         ShowWindow, PostMessageW, SW_MINIMIZE, WM_CLOSE,
     };
-    use windows::Win32::UI::Shell::{ShellExecuteW, SHELLEXECUTEINFOW, SEE_MASK_FLAG_NO_UI};
+    use windows::Win32::UI::Shell::{ShellExecuteExW, SHELLEXECUTEINFOW, SEE_MASK_FLAG_NO_UI};
     use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
     use windows::core::{HSTRING, PCWSTR, w};
 
