@@ -265,7 +265,7 @@ mod window_impl {
         match unsafe { ShellExecuteExW(&mut sei) } {
             Ok(_) => format!("Відкриваю «{title}»."),
             Err(_) => format!("Не вдалося відкрити «{title}»."),
-        };
+        }
     }
 }
 
