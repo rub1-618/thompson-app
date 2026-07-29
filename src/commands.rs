@@ -32,13 +32,13 @@ pub static CMDS: &[(Command, &[&str])] = &[
         "завантаження процесора", "завантаження системи",
     ]),
     (Command::WindowClose, &[
-        "закрий вікно",
+        "закрий вікно", "close window",
     ]),
     (Command::WindowHide, &[
-        "мінімізуй", "заховай вікно", "згорни вікно", "сховай вікно",
+        "мінімізуй", "заховай вікно", "згорни вікно", "сховай вікно", "hide window", "minimize window",
     ]),
     (Command::WindowOpen, &[
-        "відкрий вікно", "покажи вікно", "переключи вікно",
+        "відкрий вікно", "покажи вікно", "переключи вікно", "open window", "show window",
     ]),
     (Command::Screen, &[
         "що на екрані", "аналіз екрану", "screenshot analysis", "analyze screen",

@@ -51,17 +51,17 @@ pub fn window(cmd: Command, text: &str) -> String {
     };
     let title = strip_window_trigger(text);
     if title.is_empty() {
-        return "Вкажіть назву вікна.".to_string();
+        return "Вкажіть назву вікна у коммандi пiсля 'window'.".to_string();
     }
     window_impl::apply(action, &title)
 }
 
 fn strip_window_trigger(text: &str) -> String {
-    const TRIGGERS: [&str; 8] = [
-        "закрий вікно", "мінімізуй", 
-        "заховай вікно", "згорни вікно", 
-        "сховай вікно", "відкрий вікно", 
-        "покажи вікно", "переключи вікно"
+    const TRIGGERS: [&str; 13] = [
+        "закрий вікно", "мінімізуй", "close window",
+        "заховай вікно", "згорни вікно", "hide window",
+        "сховай вікно", "відкрий вікно", "minimize window",
+        "покажи вікно", "переключи вікно", "open window", "show window",
     ];
     let lower= text.to_lowercase();
     for trigger in TRIGGERS {
@@ -84,6 +84,11 @@ mod window_impl {
                 Err(_) => format!("Не вдалося відкрити «{title}»."),
             };
         }
+
+        if is_hyprland() {
+            return hypr_apply(action, title);
+        }
+
         let out = match Command::new("xdotool")
             .args(["search", "--onlyvisible", "--name", title])
             .output()
@@ -119,12 +124,98 @@ mod window_impl {
             _ => "Не вдалося керувати вікном.".to_string()
         }
     }
+
+    fn hypr_apply(action: WindowAction, title: &str) -> String {
+        let addr = match hypr_find_address(title) {
+            Some(a) => a,
+            None => return format!("Вікно «{title}» не знайдено.")
+        };
+
+        let (dispatcher, arg) = match action {
+            WindowAction::Close => ("closewindow", format!("address:{addr}")),
+            WindowAction::Hide  => ("movetoworkspacesilent", format!("special:minimized,address:{addr}")),
+            WindowAction::Show  => unreachable!(),
+        };
+        match Command::new("hyprctl").args(["dispatch", dispatcher, &arg]).status() {
+            Ok(s) => {
+                if s.success() {
+                    "Готово.".to_string()
+                } else {
+                    "Не вдалося керувати вікном.".to_string()
+                }
+            }
+            _ => "Не вдалося керувати вікном.".to_string()
+        }
+
+    }
+
+    fn hypr_find_address(needle: &str) -> Option<String> {
+        let out = Command::new("hyprctl").arg("clients").output().ok()?;
+        let text = String::from_utf8_lossy(&out.stdout);
+        let needle = needle.to_lowercase();
+
+        let mut addr: Option<String> = None;
+        let mut is_tom = false;
+        for line in text.lines() {
+            if let Some(rest) = line.strip_prefix("Window ") {
+                addr = rest.split_whitespace().next().map(|s| format!("0x{s}"));
+                is_tom = false;
+            } else {
+                let l = line.trim();
+                if l == "class: thompson-app" {
+                    is_tom = true;
+                }
+                if !is_tom {
+                    if let Some(v) = l.strip_prefix("class: ").or_else(|| l.strip_prefix("title: ")) {
+                        if v.to_lowercase().contains(&needle) {
+                            return addr;
+                        }
+                    }
+                }
+            }
+        }
+        None
+    }
+
+    fn is_hyprland() -> bool {
+        std::env::var("HYPRLAND_INSTANCE_SIGNATURE").is_ok()
+    }
 }
 
 #[cfg(target_os = "windows")]
 mod window_impl {
     use super::WindowAction;
     use std::process::Command;
+    use windows::Win32::Foundation::{HWND, LPARAM, BOOL, WPARAM};
+    use windows::Win32::UI::WindowsAndMessaging::{
+        EnumWindows, GetWindowTextW, IsWindowVisible,
+        ShowWindow, PostMessageW, SW_MINIMIZE, WM_CLOSE,
+    };
+
+    struct Search<'a> {
+        needle: &'a str,
+        found: Option<HWND>,
+    }
+
+    unsafe extern "system" fn enum_cb(hwnd: HWND, lparam: LPARAM) -> BOOL {
+        unsafe {
+            let search = &mut *(lparam.0 as *mut Search);
+
+            if !IsWindowVisible(hwnd).as_bool() {
+                return BOOL(1);
+            }
+
+            let mut buf = [0u16; 512];
+            let len = GetWindowTextW(hwnd, &mut buf);
+            let title = String::from_utf16_lossy(&buf[..len as usize]);   
+
+            if title.to_lowercase().contains(&search.needle.to_lowercase()) {
+                search.found = Some(hwnd);
+                return BOOL(0);
+            }
+            BOOL(1)
+        }
+    }
 
     pub fn apply(action: WindowAction, title: &str) -> String {
         if let WindowAction::Show = action {
@@ -134,7 +225,32 @@ mod window_impl {
                 Err(_) => format!("Не вдалося відкрити «{title}»."),
             };
         }
-        "not yet".to_string()
+
+        let mut search = Search { needle: title, found: None };
+        unsafe {
+            let _ = EnumWindows(
+                Some(enum_cb),
+                LPARAM(&mut search as *mut _ as isize),
+            );
+        }
+
+        let hwnd = match search.found {
+            Some(h) => h,
+            None => return format!("Вікно «{title}» не знайдено."),
+        };
+
+        let ok = unsafe {
+            match action {
+                WindowAction::Hide  => { let _ = ShowWindow(hwnd, SW_MINIMIZE); true }
+                WindowAction::Close => PostMessageW(hwnd, WM_CLOSE, WPARAM(0), LPARAM(0)).is_ok(),
+                WindowAction::Show  => unreachable!()
+            }
+        };
+        if ok {
+            "Готово.".to_string()
+        } else {
+            "Не вдалося керувати вікном.".to_string()
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 [package]
 name = "thompson-app"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 
 [dependencies]
@@ -32,4 +32,6 @@ windows = { version = "0.58", features = [
     "Foundation",
     "Foundation_Collections",
     "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_Foundation",
 ] }
