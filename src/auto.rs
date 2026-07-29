@@ -219,8 +219,7 @@ mod window_impl {
 
     pub fn apply(action: WindowAction, title: &str) -> String {
         if let WindowAction::Show = action {
-            return match Command::new("cmd").
-                args(["/C", "start", "", title]).spawn() {
+            return match Command::new(title).spawn() {
                 Ok(_) => format!("Відкриваю «{title}»."),
                 Err(_) => format!("Не вдалося відкрити «{title}»."),
             };
