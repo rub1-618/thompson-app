@@ -1,3 +1,5 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use crate::{core::{CommandEntry, HistoryEntry, SettingsEntry}, dispatcher::Dispatcher};
 use std::sync::{atomic::Ordering, mpsc::Sender};
 use core::MemoryStore;
