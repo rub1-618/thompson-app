@@ -2,7 +2,7 @@ use crate::core::{HistoryEntry, Roles, SettingsEntry};
 use serde::{Deserialize, Serialize};
 
 const OLLAMA_URL: &str = "http://localhost:11434/api/chat";
-const SYSTEM_PROMPT: &str = "Відповідай стисло і без емодзі.";
+const SYSTEM_PROMPT: &str = "Answer shortly with no emojis and on the language the prompr is written.";
 const CONTEXT_TURNS: usize = 2; // the amount of last replicas as context
 const ALLOW_STREAM: bool = false;
 
