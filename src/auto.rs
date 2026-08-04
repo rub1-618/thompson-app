@@ -131,12 +131,14 @@ pub fn window(cmd: Command, text: &str) -> String {
 }
 
 fn strip_window_trigger(text: &str) -> String {
-    const TRIGGERS: [&str; 13] = [
-        "закрий вікно", "мінімізуй", "close window",
-        "заховай вікно", "згорни вікно", "hide window",
-        "сховай вікно", "відкрий вікно", "minimize window",
-        "покажи вікно", "переключи вікно", "open window", "show window",
-    ];
+    const TRIGGERS: [&str; 20] = [
+            "закрий вікно", "закрий",
+            "close window", "close",
+            "сховай вікно", "мінімізуй вікно", "сховай", "мінімізуй",
+            "hide window", "minimize window", "hide", "minimize",
+            "відкрий вікно", "покажи вікно", "відкрий", "покажи",
+            "open window", "show window", "open", "show",
+        ];
     let lower= text.to_lowercase();
     for trigger in TRIGGERS {
         if lower.starts_with(trigger) {

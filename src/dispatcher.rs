@@ -133,10 +133,13 @@ fn run_custom(name: &str, path: &str) -> String {
 }
 
 fn parse_reminder(text: &str) -> (u64, String) {
-    const SKIP: [&str; 18] = ["нагади", "нагадай", "нагадування", 
-        "remind",  "me", "reminder", "встанови", "нагадування", 
-        "через", "in", "after", "хв", "хвилин", "min", "mins",
-        "minutes", "хвилину", "хвилини"];
+    const SKIP: [&str; 19] = [
+        "нагадай", "напам'ятай", "нагадування", 
+        "set", "a", "remind",  "me", "reminder", 
+        "встанови", "через", "in", "after", "хв", 
+        "хвилин", "min", "mins", "minutes", 
+        "хвилину", "хвилини"
+    ];
     let mut minutes: Option<u64> = None;
     let mut label_words: Vec<&str> = Vec::new();
     for word in text.split_whitespace() {
@@ -161,7 +164,10 @@ fn parse_reminder(text: &str) -> (u64, String) {
 }
 
 fn strip_dictation_trigger(text: &str) -> &str {
-    const TRIGGERS: [&str; 6] = ["напиши", "надрукуй", "введи текст", "type this", "print this", "type"];
+    const TRIGGERS: [&str; 6] = [
+        "напиши", "надрукуй", "введи",
+        "type", "write", "input",
+    ];
     let lower= text.to_lowercase();
     for trigger in TRIGGERS {
         if lower.starts_with(trigger) {
