@@ -60,12 +60,12 @@ mod dictate_impl {
         match status {
             Ok(s) => {
                 if s.success() {
-                    format!("Надруковано {text}.")
+                    format!("Written: {text}.")
                 } else {
-                    "Не вдалося надрукувати текст.".to_string()
+                    "Could not type the text.".to_string()
                 }
             }
-            Err(_) => "Немає інструмента для друку (встанови wtype/xdotool).".to_string()
+            Err(_) => "No typing tool (suggest installing wtype/xdotool).".to_string()
         }
 
     }
@@ -100,13 +100,13 @@ mod dictate_impl {
             inputs.push(key_event(unit, KEYEVENTF_UNICODE | KEYEVENTF_KEYUP));
         }
         if inputs.is_empty() {
-            return format!("Надруковано «{text}».");
+            return format!("Could not type the text: «{text}».");
         }
         let sent = unsafe { SendInput(&inputs, std::mem::size_of::<INPUT>() as i32) };
         if sent as usize == inputs.len() {
-            format!("Надруковано «{text}».")
+            format!("Written «{text}».")
         } else {
-            "Не вдалося надрукувати текст.".to_string()
+            "Could not type the text.".to_string()
         }
     }
 }
@@ -125,18 +125,15 @@ pub fn window(cmd: Command, text: &str) -> String {
     };
     let title = strip_window_trigger(text);
     if title.is_empty() {
-        return "Вкажіть назву вікна у коммандi пiсля 'window'.".to_string();
+        return "Say the programm name after 'window'.".to_string();
     }
     window_impl::apply(action, &title)
 }
 
 fn strip_window_trigger(text: &str) -> String {
-    const TRIGGERS: [&str; 20] = [
-            "закрий вікно", "закрий",
+    const TRIGGERS: [&str; 10] = [
             "close window", "close",
-            "сховай вікно", "мінімізуй вікно", "сховай", "мінімізуй",
             "hide window", "minimize window", "hide", "minimize",
-            "відкрий вікно", "покажи вікно", "відкрий", "покажи",
             "open window", "show window", "open", "show",
         ];
     let lower= text.to_lowercase();
@@ -156,8 +153,8 @@ mod window_impl {
     pub fn apply(action: WindowAction, title: &str) -> String {
         if let WindowAction::Show = action {
             return match Command::new(title).spawn() {
-                Ok(_) => format!("Відкриваю «{title}»."),
-                Err(_) => format!("Не вдалося відкрити «{title}»."),
+                Ok(_) => format!("Opening «{title}»."),
+                Err(_) => format!("Could not open «{title}»."),
             };
         }
 
@@ -170,7 +167,7 @@ mod window_impl {
             .output()
                 {
                     Ok(o) => o,
-                    Err(_) => return "xdotool не встановлено.".to_string(),
+                    Err(_) => return "xdotool not installed.".to_string(),
                 };
         let ids = String::from_utf8_lossy(&out.stdout);
         let id = match ids.lines().next() {
@@ -178,10 +175,10 @@ mod window_impl {
                 if !id.is_empty() {
                     id
                 } else {
-                    return format!("Вікно «{title}» не знайдено.")
+                    return format!("Window «{title}» not found.")
                 }
             }
-            _ => return format!("Вікно «{title}» не знайдено.")
+            _ => return format!("Window «{title}» not found.")
         };
 
         let sub = match action {
@@ -192,19 +189,19 @@ mod window_impl {
         match Command::new("xdotool").args([sub, id]).status() {
             Ok(s) => {
                 if s.success() {
-                    "Готово.".to_string()
+                    "All done.".to_string()
                 } else {
-                    "Не вдалося керувати вікном.".to_string()
+                    "Could not manipulate the window.".to_string()
                 }
             }
-            _ => "Не вдалося керувати вікном.".to_string()
+            _ => "Could not manipulate the window.".to_string()
         }
     }
 
     fn hypr_apply(action: WindowAction, title: &str) -> String {
         let addr = match hypr_find_address(title) {
             Some(a) => a,
-            None => return format!("Вікно «{title}» не знайдено.")
+            None => return format!("Window «{title}» not found.")
         };
 
         let (dispatcher, arg) = match action {
@@ -215,12 +212,12 @@ mod window_impl {
         match Command::new("hyprctl").args(["dispatch", dispatcher, &arg]).status() {
             Ok(s) => {
                 if s.success() {
-                    "Готово.".to_string()
+                    "All done.".to_string()
                 } else {
-                    "Не вдалося керувати вікном.".to_string()
+                    "Could not manipulate the window.".to_string()
                 }
             }
-            _ => "Не вдалося керувати вікном.".to_string()
+            _ => "Could not manipulate the window.".to_string()
         }
 
     }
@@ -310,7 +307,7 @@ mod window_impl {
 
         let hwnd = match search.found {
             Some(h) => h,
-            None => return format!("Вікно «{title}» не знайдено."),
+            None => return format!("Window «{title}» not found."),
         };
 
         let ok = unsafe {
@@ -321,9 +318,9 @@ mod window_impl {
             }
         };
         if ok {
-            "Готово.".to_string()
+            "All done.".to_string()
         } else {
-            "Не вдалося керувати вікном.".to_string()
+            "Could not manipulate the window.".to_string()
         }
     }
 
@@ -338,8 +335,8 @@ mod window_impl {
             ..Default::default()
         };
         match unsafe { ShellExecuteExW(&mut sei) } {
-            Ok(_) => format!("Відкриваю «{title}»."),
-            Err(_) => format!("Не вдалося відкрити «{title}»."),
+            Ok(_) => format!("Opening «{title}»."),
+            Err(_) => format!("Could not open «{title}»."),
         }
     }
 }
@@ -353,13 +350,13 @@ use std::io::Cursor;
 pub async fn screen(settings: &SettingsEntry) -> String {
     let b64 = match tokio::task::spawn_blocking(capture_screen_base64).await {
         Ok(Ok(s)) => s,
-        Ok(Err(e)) => return format!("Не вдалось зробити скріншот: {}", e),
-        Err(_) => return "Помилка захоплення екрана.".to_string(),
+        Ok(Err(e)) => return format!("Could not take a screenshot: {}", e),
+        Err(_) => return "Screen capturing error.".to_string(),
     };
 
     crate::ai::ask_gemini_vision(
         &b64, 
-        "Що ти бачиш на цьому скріншоті? Опиши коротко.", 
+        "What do you see on the screenshot? Answer shortly.", 
         settings
     ).await
 }
@@ -402,50 +399,50 @@ mod media_impl {
     pub fn media_toggle() -> String {
         match active_player() {
             Ok(pl) => match pl.play_pause() {
-                Ok(_) => "Музика перемкнена".to_string(),
-                Err(_) => "Не керувати музикою.".to_string(),
+                Ok(_) => "Music toggled.".to_string(),
+                Err(_) => "Could not toggle the music.".to_string(),
             }
-            Err(_) => "Немає активного плеєра.".to_string()
+            Err(_) => "Active media player not found.".to_string()
         }
     }
 
     pub fn next() -> String {
         match active_player() {
             Ok(pl) => match pl.next() {
-                Ok(_) => "Музика перемкнена".to_string(),
-                Err(_) => "Не вдалося перемкнути музику.".to_string(),
+                Ok(_) => "Switched music to next.".to_string(),
+                Err(_) => "Could not switch the music to the next one.".to_string(),
             }
-            Err(_) => "Немає активного плеєра.".to_string()
+            Err(_) => "Active media player not found.".to_string()
         }
     }
 
     pub fn prev() -> String {
         match active_player() {
             Ok(pl) => match pl.previous() {
-                Ok(_) => "Музика перемкнена".to_string(),
-                Err(_) => "Не вдалося перемкнути музику.".to_string(),
+                Ok(_) => "Switched music to previous.".to_string(),
+                Err(_) => "Could not switch the music to the previous one.".to_string(),
             }
-            Err(_) => "Немає активного плеєра.".to_string()
+            Err(_) => "Active media player not found.".to_string()
         }
     }
 
     pub fn info() -> String {
         let player = match active_player() {
             Ok(pl) => pl,
-            Err(_) => return "Немає активного плеєра.".to_string()
+            Err(_) => return "Active media player not found.".to_string()
         };
 
         let meta = match player.get_metadata() {
             Ok(m) => m,
-            Err(_) => return "Немає інформації про трек.".to_string()
+            Err(_) => return "No information about the song found.".to_string()
         };
 
         let title = meta.title().unwrap_or("Назва треку невідомa.");
         let artist = meta.artists().and_then(|a| a.first().copied()).unwrap_or("");
         if artist.is_empty() {
-            format!("Зараз грає: {title}")
+            format!("Now is playing: {title}")
         } else {
-            format!("Зараз грає: {title} від {artist}.")
+            format!("Now is playing: {title} from {artist}.")
         }
     }
 
@@ -457,12 +454,12 @@ mod media_impl {
                 {
                     Ok(s) => {
                         if s.success() {
-                            "Звук перемкнено.".to_string()
+                            "Sound toggled.".to_string()
                         } else {
-                            "Не вдалося керувати звуком.".to_string()
+                            "Could not toggle the sound.".to_string()
                         }
                     },
-                    _ => "Не вдалося керувати звуком.".to_string()
+                    _ => "Could not toggle the sound.".to_string()
                 }
     }
 }
@@ -482,7 +479,7 @@ mod media_impl {
             keybd_event(VK_MEDIA_PLAY_PAUSE.0 as u8, 0, KEYBD_EVENT_FLAGS(0), 0);
             keybd_event(VK_MEDIA_PLAY_PAUSE.0 as u8, 0, KEYEVENTF_KEYUP, 0);
         }
-        "Музика перемкнена".to_string()
+        "Music toggled.".to_string()
     }
 
     pub fn next() -> String {
@@ -490,7 +487,7 @@ mod media_impl {
             keybd_event(VK_MEDIA_NEXT_TRACK.0 as u8, 0, KEYBD_EVENT_FLAGS(0), 0);
             keybd_event(VK_MEDIA_NEXT_TRACK.0 as u8, 0, KEYEVENTF_KEYUP, 0);
         }
-        "Музика перемкнена".to_string()
+        "Switched music to next.".to_string()
     }
 
     pub fn prev() -> String {
@@ -498,34 +495,34 @@ mod media_impl {
             keybd_event(VK_MEDIA_PREV_TRACK.0 as u8, 0, KEYBD_EVENT_FLAGS(0), 0);
             keybd_event(VK_MEDIA_PREV_TRACK.0 as u8, 0, KEYEVENTF_KEYUP, 0);
         }
-        "Музика перемкнена".to_string()
+        "Switched music to previous.".to_string()
     }
 
     pub fn info() -> String {
         let manager = match GlobalSystemMediaTransportControlsSessionManager::RequestAsync() {
             Ok(op) => {match op.get() {
                 Ok(m) => m,
-                Err(_) => return "Немає інформації про трек.".to_string()
+                Err(_) => return "No information about the song found.".to_string()
             }}
-            Err(_) => return "Немає інформації про трек.".to_string()
+            Err(_) => return "No information about the song found.".to_string()
         };
         let session = match manager.GetCurrentSession() {
             Ok(s) => s,
-            Err(_) => return "Немає активного плеєра.".to_string()
+            Err(_) => return "Active media player not found.".to_string()
         };
         let props = match session.TryGetMediaPropertiesAsync() {
             Ok(op) => match op.get() {
                 Ok(p) => p,
-                Err(_) => return "Немає інформації про трек.".to_string()
+                Err(_) => return "No information about the song found.".to_string()
             },
-            Err(_) => return "Немає інформації про трек.".to_string()
+            Err(_) => return "No information about the song found.".to_string()
         };
         let title = props.Title().map(|e| e.to_string()).unwrap_or_default();
         let artist = props.AlbumArtist().map(|e| e.to_string()).unwrap_or_default();
         if artist.is_empty() {
-            format!("Зараз грає: {title}")
+            format!("Now is playing: {title}")
         } else {
-            format!("Зараз грає: {title} від {artist}.")
+            format!("Now is playing: {title} from {artist}.")
         }
     }
 
@@ -534,7 +531,7 @@ mod media_impl {
             keybd_event(VK_VOLUME_MUTE.0 as u8, 0, KEYBD_EVENT_FLAGS(0), 0);
             keybd_event(VK_VOLUME_MUTE.0 as u8, 0, KEYEVENTF_KEYUP, 0);
         }
-        "Звук перемкнено.".to_string()
+        "Sound toggled.".to_string()
     }
 }
 

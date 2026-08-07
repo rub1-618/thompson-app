@@ -257,5 +257,5 @@ fn main() {
             move_window, open_url, toggle_listening,
         ])
         .run(tauri::generate_context!())
-        .expect("помилка запуску Tauri")
+        .expect("tauri launching error")
 }

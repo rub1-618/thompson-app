@@ -7,8 +7,8 @@ use std::collections::BTreeSet;
 use std::u64;
 
 const CMD_THRESHOLD: f64 = 0.55;
-const CANCEL_PHRASES: [&str; 6] = ["ні", "no", "скасуй", "відміни", "не треба", "cancel" ];
-const CONFIRM_PHRASES: [&str; 8] = ["так", "yes", "підтверджую", "підтверди", "ок", "ok", "добре", "гаразд"];
+const CANCEL_PHRASES: [&str; 3] = [ "no", "cancel", "negative" ];
+const CONFIRM_PHRASES: [&str; 3] = [ "yes", "ok", "affirmative" ];
 const CANCEL_THRESHOLD: f64 = 0.8;
 const CONFIRM_THRESHOLD: f64 = 0.8;
 
@@ -127,18 +127,17 @@ fn find_custom(text: &str, store: &MemoryStore) -> Option<(String, String)> {
 
 fn run_custom(name: &str, path: &str) -> String {
     match tokio::process::Command::new("sh").arg("-c").arg(path).spawn() {
-        Ok(_) => format!("Виконую '{name}'."),
-        Err(_) => format!("Не вдалось виконати '{name}'."),
+        Ok(_) => format!("Doing '{name}'."),
+        Err(_) => format!("Could not do '{name}'."),
     }
 }
 
 fn parse_reminder(text: &str) -> (u64, String) {
-    const SKIP: [&str; 19] = [
-        "нагадай", "напам'ятай", "нагадування", 
-        "set", "a", "remind",  "me", "reminder", 
-        "встанови", "через", "in", "after", "хв", 
-        "хвилин", "min", "mins", "minutes", 
-        "хвилину", "хвилини"
+    const SKIP: [&str; 11] = [
+        "set", "a", "remind",  
+        "me", "reminder", 
+        "через", "in", "after",
+        "min", "mins", "minutes", 
     ];
     let mut minutes: Option<u64> = None;
     let mut label_words: Vec<&str> = Vec::new();
@@ -164,8 +163,7 @@ fn parse_reminder(text: &str) -> (u64, String) {
 }
 
 fn strip_dictation_trigger(text: &str) -> &str {
-    const TRIGGERS: [&str; 6] = [
-        "напиши", "надрукуй", "введи",
+    const TRIGGERS: [&str; 3] = [
         "type", "write", "input",
     ];
     let lower= text.to_lowercase();
@@ -179,7 +177,7 @@ fn strip_dictation_trigger(text: &str) -> &str {
 
 fn continue_dictation(text: &str) -> String {
     if match_whole_phrase(text, &CANCEL_PHRASES, CANCEL_THRESHOLD) {
-        return "Скасовано.".to_string();
+        return "Canceled.".to_string();
     }
     crate::auto::dictate(text)
 }
@@ -244,31 +242,31 @@ use crate::{commands::Command, dispatcher::{CMD_THRESHOLD, find_command, parse_r
 
     #[test]
     fn test_tsr() {
-        let str1 = "плагін запусти";
-        let str2 = "запусти плагін";
+        let str1 = "plugin launch";
+        let str2 = "launch plugin";
 
         assert!(token_set_ratio(str1, str2) == 1.0)
     }
 
     #[test]
     fn test_tsr_neg() {
-        let str1 = "котра година";
-        let str2 = "запусти плагін";
+        let str1 = "what's the time";
+        let str2 = "launch plugin";
 
         assert!(token_set_ratio(str1, str2) < 0.3)
     }
 
     #[test]
     fn test_formula() {
-        let str1 = "томікс ну запусти плагін будь ласка";
-        let str2 = "запусти плагін";
+        let str1 = "tom please start the plugin";
+        let str2 = "start the plugin";
 
         assert!(0.7 * token_set_ratio(str1, str2) + 0.3 * ratio(str1.chars(), str2.chars()) >= CMD_THRESHOLD)
     }
 
     #[test]
     fn test_findcmd() {
-        match find_command("стоп") {
+        match find_command("stop") {
             Some((cmd, score)) => {
                 assert_eq!(cmd, Command::Stop);
                 assert!((score - 1.0).abs() < 1e-9)
@@ -280,17 +278,17 @@ use crate::{commands::Command, dispatcher::{CMD_THRESHOLD, find_command, parse_r
     #[test]
     fn test_cmds() {
         let cases = [
-            ( "стоп",               Command::Stop ),
-            ( "котра година",       Command::Ctime ),
-            ( "статистика",         Command::Stats ),
-            ( "що на екрані",       Command::Screen ),
-            ( "музика",             Command::MusicToggle ),
-            ( "наступний трек",     Command::MusicNext ),
-            ( "попередній трек",    Command::MusicPrev ),
-            ( "який трек",          Command::MusicInfo ),
-            ( "нагадування",        Command::Remind ),
-            ( "відкрий браузер",    Command::OpenBrowser ),
-            ( "увімкнути звук",     Command::ToggleSound ),
+            ( "stop",               Command::Stop ),
+            ( "what is the time",   Command::Ctime ),
+            ( "statistics",         Command::Stats ),
+            ( "screen analysis",    Command::Screen ),
+            ( "toggle sound",       Command::ToggleSound ),
+            ( "toggle music",       Command::MusicToggle ),
+            ( "next song",          Command::MusicNext ),
+            ( "prev song",          Command::MusicPrev ),
+            ( "what's playing",     Command::MusicInfo ),
+            ( "remind me",          Command::Remind ),
+            ( "open browser",       Command::OpenBrowser ),
             // todo dictation, windows
         ];
         for ( phrase, expected ) in cases {

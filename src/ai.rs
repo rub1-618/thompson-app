@@ -124,7 +124,7 @@ fn gemini_role(role: Roles) -> String {
 
 pub async fn ask_gemini(prompt: &str, history: &[HistoryEntry], settings: &SettingsEntry) -> String {
     if settings.gemini_key.is_empty() {
-        return "API-ключ для Gemini не знайдено.".to_string()
+        return "API-key for Gemini not found.".to_string()
     }
     let model = settings.map.get("gemini_model")
         .and_then(|v| v.as_str()).unwrap_or("gemini-2.0-flash");
@@ -159,14 +159,14 @@ pub async fn ask_gemini(prompt: &str, history: &[HistoryEntry], settings: &Setti
 
     match resp.status().as_u16() {
         200 => {}
-        429 => return "Gemini: перевищено квоту, спробуйте пізніше.".to_string(),
-        400 | 403 => return "Ви на авторизованi або невказаний ключ.".to_string(),
-        _ => return "Gemini: сервери переповнені.".to_string(),
+        429 => return "Gemini: quota is reached, wait a bit for it to reload.".to_string(),
+        400 | 403 => return "Not authorised or no key found.".to_string(),
+        _ => return "Gemini: servers are full, wait a bit.".to_string(),
     }
 
     let parsed: GeminiResponse = match resp.json().await {
         Ok(p) => p,
-        Err(_) => return "Gemini: сервери переповнені.".to_string(),
+        Err(_) => return "Gemini: servers are full, wait a bit.".to_string(),
     };
 
     let text = parsed.candidates.first()
@@ -174,7 +174,7 @@ pub async fn ask_gemini(prompt: &str, history: &[HistoryEntry], settings: &Setti
         .map(|p| p.text.trim().to_string())
         .unwrap_or_default();
     if text.is_empty() {
-        "Не вдалось отримати відповідь.".to_string()
+        "Could not get the answer from a model.".to_string()
     } else { text }
 }
 
@@ -182,7 +182,7 @@ pub async fn ask_gemini(prompt: &str, history: &[HistoryEntry], settings: &Setti
 
 pub async fn ask_gemini_vision(image_b64: &str, prompt: &str, settings: &SettingsEntry) -> String {
     if settings.gemini_key.is_empty() {
-        return "API-ключ для Gemini не знайдено.".to_string()
+        return "API-key for Gemini not found.".to_string()
     }
     let model = settings.map.get("gemini_model")
         .and_then(|v| v.as_str()).unwrap_or("gemini-2.0-flash");
@@ -203,18 +203,18 @@ pub async fn ask_gemini_vision(image_b64: &str, prompt: &str, settings: &Setting
 
     let resp = match::reqwest::Client::new().post(&url).json(&body).send().await {
         Ok(r) => r,
-        Err(_) => return "Gemini: сервери переповнені.".to_string(),
+        Err(_) => return "Gemini: servers are full, wait a bit.".to_string(),
     };
     match resp.status().as_u16() {
         200 => {}
-        429 => return "Gemini: перевищено квоту, спробуйте пізніше.".to_string(),
-        400 | 403 => return "Ви на авторизованi або невказаний ключ.".to_string(),
-        _ => return "Gemini: сервери переповнені.".to_string(),
+        429 => return "Gemini: quota is reached, wait a bit for it to reload.".to_string(),
+        400 | 403 => return "Not authorised or no key found.".to_string(),
+        _ => return "Gemini: servers are full, wait a bit.".to_string(),
     };
 
     let parsed: GeminiResponse = match resp.json().await {
         Ok(p) => p,
-        Err(_) => return "Gemini: сервери переповнені.".to_string(),
+        Err(_) => return "Gemini: servers are full, wait a bit.".to_string(),
     };
     let text = parsed.candidates.first()
         .and_then(|c| c.content.parts.first())
@@ -222,6 +222,6 @@ pub async fn ask_gemini_vision(image_b64: &str, prompt: &str, settings: &Setting
         .unwrap_or_default();
 
     if text.is_empty() {
-        "Не вдалось отримати відповідь.".to_string()
+        "Could not get the answer from a model.".to_string()
     } else { text }
 }

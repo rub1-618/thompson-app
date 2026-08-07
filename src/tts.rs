@@ -68,7 +68,7 @@ fn worker(rx: Receiver<TtsCommand>, voice: String, rate: i32, speaking: Arc<Atom
 fn synth_command(text: &str, _voice: &str, rate: i32) -> Command {
     let wpm = (175 + rate * 12).clamp(80, 400); // SAPI-rate | words per minute
     let mut cmd = Command::new("espeak-ng");
-    cmd.args(["-v", "uk", "-s", &wpm.to_string(), text]);
+    cmd.args(["-v", "en", "-s", &wpm.to_string(), text]);
     cmd.stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null());
     cmd
 }

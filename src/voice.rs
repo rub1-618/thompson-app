@@ -11,11 +11,11 @@ const SPEECH_END: f32 = 0.004;
 const SILENCE_MS: usize = 800;
 const IN_RATE: usize = 48000;
 const OUT_RATE: usize = 16000;
-const WAKE_WORDS: [&str; 7] = ["том", "tomi", "дом", "тому", "tom", "thompson", "томпсон"]; // дом + тому -- for better model perfomance
-const STOP_WORDS: [&str; 5] = ["стоп", "замовчи", "тихо", "мовчи", "stop"];
-const FILLERS: [&str; 14] = [
-    "том", "tom", "томпсон", "thompson", "tomi", "скажи", "розкажи",
-    "будь", "ласка", "please", "можешь", "давай", "ну", "can",
+const WAKE_WORDS: [&str; 5] = ["tom", "tomi", "тому", "tom", "thompson"]; // дом + тому -- for better model perfomance
+const STOP_WORDS: [&str; 4] = ["stop", "stop speaking", "shut up", "silence"];
+const FILLERS: [&str; 11] = [
+    "tom", "tomi", "тому", "tom", "thompson", "say", "tell",
+    "please", "can", "you", "pls"
 ];
 const WAKE_THRESHOLD: f64 = 0.55;
 const STOP_THRESHOLD: f64 = 0.80;
