@@ -102,7 +102,7 @@ fn rms(buf: &[f32]) -> f32 {
 
 fn transcribe(state: &mut whisper_rs::WhisperState, audio: &[f32]) -> String {
     let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
-    params.set_language(Some("uk"));
+    params.set_language(Some("en"));
     params.set_print_special(false);
     params.set_print_progress(false);
     params.set_print_realtime(false);

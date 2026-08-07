@@ -24,6 +24,9 @@ pub struct SettingsEntry {
     #[serde(default)]
     pub ai_mode: String,
 
+    // #[serde(default)]  // todo: custom nicknames
+    // pub nicknames: Vec<String>,
+
     #[serde(default)]
     pub gemini_key: String,
 

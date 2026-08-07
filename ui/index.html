@@ -37,7 +37,7 @@
     </div>
 
     <div class="msg-input">
-      <input id="cmd" placeholder="Введи команду..." autofocus />
+      <input id="cmd" placeholder="Type command..." autofocus />
       <div class="input-controls">
         <div class="left-controls">
           <button id="btn-mute" onclick="toggleMute()">
@@ -69,35 +69,49 @@
     <div class="settings-container">
 
       <!-- * models -->
-      <label>Модель: <input id="set-model" type="text" placeholder="llama3.2:1b" /></label>
-      <p>Ви можете знайти багато моделей на <a id="ollama-href" href="#" onclick="openExternal('https://ollama.com/library?sort=popular'); return false;">https://ollama.com</a></p>
+      <label>Model: <input id="set-model" type="text" placeholder="llama3.2:1b" /></label>
+      <p>
+        You can find the model names on
+        <a id="ollama-href" href="#" onclick="openExternal('https://ollama.com/library?sort=popular'); return false;">https://ollama.com</a>
+      </p>
+      
       
       <!-- * cloud api -->
-      <label>Gemini API ключ: <input id="set-gemini-key" type="text" /></label>
+      <label>Gemini API key: <input id="set-gemini-key" type="text" /></label>
 
       <!-- * whisper model -->
-      <label>Модель розпізнавання: <input id="set-whisper-model" type="text" placeholder="models/ggml-base.bin" /></label>
+      <label>Recognition model: <input id="set-whisper-model" type="text" placeholder="models/ggml-base.bin" /></label>
+
+      <hr>
+
+      <!-- * assistant name -->
+      <label>Custom assistant name: <input id="set-assistant-name" type="text" placeholder="tom" /></label>
+      <button id="add-name-btn" type="button" onclick="addName()">Add name</button>
+ 
+      <hr>
 
       <!-- * themes -->
-      <label>Акцент: <input id="set-accent" type="color" /></label>
-      <label>Фон: <input id="set-bg" type="color" /></label>
-      <label>Другорядний: <input id="set-muted" type="color" /></label>
+      <label>Primary: <input id="set-accent" type="color" /></label>
+      <label>Background: <input id="set-bg" type="color" /></label>
+      <label>Secondary: <input id="set-muted" type="color" /></label>
  
-      <button onclick="saveSettings()">Зберегти</button>
+      <hr>
+
+      <button id="save-settings-btn" onclick="saveSettings()">Save settings</button>
     </div>
   </div>
 
   <!--! custom cmds -->
   <div id="page-commands" class="page">
     <div class="commands-container">
-      <h2>Кастомні команди</h2>
+      <h2>Custom commands</h2>
 
       <div class="command-form">
-        <label>Назва: <input id="cmd-name" type="text" placeholder="Відкрити термінал" /></label>
-        <label>Команда/шлях: <input id="cmd-path" type="text" placeholder="kitty" /></label>
+        <label>Command name: <input id="cmd-name" type="text" placeholder="Open terminal" /></label>
+        <label>Programm/path: <input id="cmd-path" type="text" placeholder="kitty" /></label>
  
         <div class="cmd-block">
-          <label>Тригери:</label>
+          <label>Triggers:</label>
           <div class="trigger-input">
             <input id="cmd-trigger-input" type="text" placeholder="terminal" />
             <button type="button" onclick="addTrigger()">+</button>
@@ -105,7 +119,7 @@
           <div id="trigger-chips" class="trigger-chips"></div>
         </div>
 
-        <button onclick="saveCommand()">Додати</button>
+        <button onclick="saveCommand()">Add</button>
       </div>
 
       <div id="commands-list"></div>

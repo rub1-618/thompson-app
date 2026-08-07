@@ -4,11 +4,11 @@ const { listen } = window.__TAURI__.event;
 const input = document.getElementById("cmd");
 const log = document.getElementById("log");
 const STATUS_LABELS = {
-    listening:  "Слухаю",
-    processing: "Обробляю...",
-    wake:       "Так?",
+    listening:  "Listening",
+    processing: "Working on it...",
+    wake:       "Yep?",
     idle:       "",
-    no_mic:     "Немає мікрофона",
+    no_mic:     "No mic found",
 }
 
 function addMessage(text, role) {
@@ -143,7 +143,7 @@ async function loadCommands() {
     const list =document.getElementById("commands-list");
     list.innerHTML = "";
     if (!cmds.length) {
-        list.innerHTML = '<p class="cmd-empty">Поки що немає команд.</p>';
+        list.innerHTML = '<p class="cmd-empty">Oops! Looks like you haven\'t created any command yet.</p>';
         return;
     }
     cmds.forEach((c, i) => {
