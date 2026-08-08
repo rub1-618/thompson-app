@@ -1,10 +1,8 @@
 # Thompson
 
-A local-first AI-assistant which speaks and texts in ukranian and is supported on Linux + Windows.
+A local-first AI-assistant which speaks and texts in english and is supported on Linux + Windows.
 
 ![build](https://github.com/rub1-618/thompson-app/actions/workflows/build.yml/badge.svg)
-
-The Ukranian version of the README is in README_UK.md.
 
 # Features:
 - Voice i/o with wake word "Tom". Has offline STT ( whisper ), VAD
